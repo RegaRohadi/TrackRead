@@ -1,31 +1,23 @@
 <template>
   <form
     @submit.prevent="submitSearch"
-    class="flex items-center gap-2 w-full max-w-md px-3 py-2 bg-white border border-gray-300 rounded-full transition-colors focus-within:border-indigo-500 focus-within:ring-4 focus-within:ring-indigo-100"
+    class="flex items-center gap-2 w-full max-w-md px-3 py-2 bg-white border border-base-300 rounded-[0.25rem] transition-colors focus-within:border-terra-600 focus-within:ring-1 focus-within:ring-terra-600 dark:bg-base-900 dark:border-base-700"
   >
-    <svg
-      class="w-[18px] h-[18px] text-gray-400 flex-shrink-0"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-    </svg>
+    <PhMagnifyingGlass :size="16" class="text-base-400 flex-shrink-0" weight="regular" />
 
     <input
       ref="inputRef"
       v-model="query"
       type="text"
-      class="flex-1 bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400"
+      class="flex-1 bg-transparent border-none outline-none text-xs sm:text-sm text-base-800 placeholder:text-base-400 dark:text-base-100 dark:placeholder:text-base-500"
       :placeholder="placeholder"
       @keydown.esc="clearQuery"
     />
 
     <button
       type="submit"
-      class="text-gray-500 hover:text-gray-700 text-sm font-medium px-2"
-      aria-label="Submit search"
+      class="text-terra-700 hover:text-terra-800 text-xs font-medium px-2 py-0.5 hover:bg-terra-50 transition-colors dark:text-terra-400 dark:hover:text-terra-300 dark:hover:bg-terra-950"
+      aria-label="Cari buku"
     >
       Cari
     </button>
@@ -33,33 +25,37 @@
     <button
       v-if="query"
       type="button"
-      class="text-gray-400 hover:text-gray-600 text-lg leading-none px-0.5"
-      aria-label="Clear search"
+      class="text-base-400 hover:text-base-600 dark:text-base-500 dark:hover:text-base-300 transition-colors p-0.5"
+      aria-label="Hapus pencarian"
       @click="clearQuery"
     >
-      ×
+      <PhX :size="14" weight="bold" />
     </button>
   </form>
 </template>
 
-<script setup>
-import { ref, watch } from 'vue'
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import { PhMagnifyingGlass, PhX } from '@phosphor-icons/vue';
 
-const props = defineProps({
-  placeholder: {
-    type: String,
-    default: 'Cari sesuatu...'
-  },
-  modelValue: {
-    type: String,
-    default: ''
-  }
+interface Props {
+  placeholder?: string
+  modelValue?: string
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  placeholder: 'Cari sesuatu...',
+  modelValue: '',
 })
 
-const emit = defineEmits(['update:modelValue', 'search', 'clear'])
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: string): void
+  (e: 'search', value: string): void
+  (e: 'clear'): void
+}>()
 
 const query = ref(props.modelValue)
-const inputRef = ref(null)
+const inputRef = ref<HTMLInputElement | null>(null)
 
 watch(query, (newVal) => {
   emit('update:modelValue', newVal)

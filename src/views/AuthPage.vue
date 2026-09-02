@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
 import { useRouter } from 'vue-router';
+import { PhSun, PhMoon } from '@phosphor-icons/vue';
 
 import { useAuthStore } from '@/stores/auth';
+import { useTheme } from '@/composables/useTheme';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const { theme, toggleTheme } = useTheme();
 
 const isLogin = reactive({ value: true });
 const form = reactive({
@@ -101,26 +104,41 @@ function toggleMode() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-8">
-    <div class="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
-      <div class="text-center">
-        <h1 class="text-2xl font-bold text-slate-900">TrackRead</h1>
-        <p class="mt-2 text-sm text-slate-500">
-          {{ isLogin.value ? 'Masuk untuk mengelola koleksi buku Anda.' : 'Buat akun untuk mulai mengelola buku.' }}
+  <div class="relative flex min-h-screen items-center justify-center bg-base-100 px-4 py-8 transition-colors dark:bg-base-950">
+    <button
+      @click="toggleTheme"
+      class="absolute top-5 right-5 flex h-9 w-9 items-center justify-center border border-base-300 bg-white text-base-600 transition-colors hover:bg-base-100 dark:border-base-700 dark:bg-base-900 dark:text-base-300 dark:hover:bg-base-800"
+      :aria-label="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
+      :title="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
+    >
+      <PhMoon v-if="theme === 'dark'" :size="16" weight="duotone" />
+      <PhSun v-else :size="16" weight="duotone" />
+    </button>
+
+    <div class="w-full max-w-md border border-base-200 bg-white p-8 dark:border-base-800 dark:bg-base-900">
+      <div class="border-b border-base-200 pb-6 dark:border-base-800">
+        <p class="mb-1 text-[11px] font-medium tracking-[0.2em] text-terra-700 uppercase dark:text-terra-400">
+          TrackRead
+        </p>
+        <h1 class="font-display text-3xl font-semibold text-base-900 dark:text-base-50">
+          {{ isLogin.value ? 'Masuk' : 'Buat akun' }}
+        </h1>
+        <p class="mt-1 text-sm text-base-500 dark:text-base-400">
+          {{ isLogin.value ? 'Kelola koleksi buku Anda.' : 'Mulai melacak bacaan Anda.' }}
         </p>
       </div>
 
-      <div class="mt-6 flex rounded-lg border border-slate-200 p-1">
+      <div class="mt-6 flex border border-base-300 dark:border-base-700">
         <button
-          class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition"
-          :class="isLogin.value ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'"
+          class="flex-1 px-3 py-2 text-sm font-medium transition-colors"
+          :class="isLogin.value ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'text-base-600 hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800'"
           @click="isLogin.value = true"
         >
           Masuk
         </button>
         <button
-          class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition"
-          :class="!isLogin.value ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50'"
+          class="flex-1 px-3 py-2 text-sm font-medium transition-colors"
+          :class="!isLogin.value ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'text-base-600 hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800'"
           @click="isLogin.value = false"
         >
           Daftar
@@ -129,93 +147,93 @@ function toggleMode() {
 
       <form class="mt-6 space-y-4" @submit.prevent="submit" novalidate>
         <div v-if="!isLogin.value">
-          <label class="mb-1 block text-sm font-medium text-slate-700">Nama</label>
+          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Nama</label>
           <input
             v-model="form.name"
             type="text"
-            class="w-full rounded-lg border px-3 py-2 outline-none"
+            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
             :class="touched.name && nameError
-              ? 'border-red-400 focus:border-red-500'
-              : 'border-slate-300 focus:border-blue-500'"
+              ? 'border-red-500 dark:border-red-600'
+              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
             placeholder="Nama lengkap"
             required
             @blur="touched.name = true"
           />
-          <p v-if="touched.name && nameError" class="mt-1 text-xs text-red-600">
+          <p v-if="touched.name && nameError" class="mt-1 text-xs text-red-600 dark:text-red-400">
             {{ nameError }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Email</label>
+          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Email</label>
           <input
             v-model="form.email"
             type="email"
-            class="w-full rounded-lg border px-3 py-2 outline-none"
+            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
             :class="touched.email && emailError
-              ? 'border-red-400 focus:border-red-500'
-              : 'border-slate-300 focus:border-blue-500'"
+              ? 'border-red-500 dark:border-red-600'
+              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
             placeholder="email@example.com"
             required
             @blur="touched.email = true"
           />
-          <p v-if="touched.email && emailError" class="mt-1 text-xs text-red-600">
+          <p v-if="touched.email && emailError" class="mt-1 text-xs text-red-600 dark:text-red-400">
             {{ emailError }}
           </p>
         </div>
 
         <div>
-          <label class="mb-1 block text-sm font-medium text-slate-700">Password</label>
+          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Password</label>
           <input
             v-model="form.password"
             type="password"
-            class="w-full rounded-lg border px-3 py-2 outline-none"
+            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
             :class="touched.password && passwordError
-              ? 'border-red-400 focus:border-red-500'
-              : 'border-slate-300 focus:border-blue-500'"
+              ? 'border-red-500 dark:border-red-600'
+              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
             placeholder="Minimal 8 karakter"
             required
             @blur="touched.password = true"
           />
-          <p v-if="touched.password && passwordError" class="mt-1 text-xs text-red-600">
+          <p v-if="touched.password && passwordError" class="mt-1 text-xs text-red-600 dark:text-red-400">
             {{ passwordError }}
           </p>
         </div>
 
         <div v-if="!isLogin.value">
-          <label class="mb-1 block text-sm font-medium text-slate-700">Konfirmasi Password</label>
+          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Konfirmasi Password</label>
           <input
             v-model="form.passwordConfirmation"
             type="password"
-            class="w-full rounded-lg border px-3 py-2 outline-none"
+            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
             :class="touched.passwordConfirmation && passwordConfirmationError
-              ? 'border-red-400 focus:border-red-500'
-              : 'border-slate-300 focus:border-blue-500'"
+              ? 'border-red-500 dark:border-red-600'
+              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
             placeholder="Ulangi password"
             required
             @blur="touched.passwordConfirmation = true"
           />
-          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 text-xs text-red-600">
+          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 text-xs text-red-600 dark:text-red-400">
             {{ passwordConfirmationError }}
           </p>
         </div>
 
-        <p v-if="authStore.error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p v-if="authStore.error" class="border-l-2 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-500 dark:bg-red-950 dark:text-red-400">
           {{ authStore.error }}
         </p>
 
         <button
           type="submit"
-          class="w-full rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full border border-terra-700 bg-terra-700 px-4 py-2.5 font-medium text-white transition-colors hover:bg-terra-800 disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="authStore.loading"
         >
           {{ authStore.loading ? 'Memproses...' : submitLabel }}
         </button>
       </form>
 
-      <p class="mt-4 text-center text-sm text-slate-500">
+      <p class="mt-5 text-center text-sm text-base-500 dark:text-base-400">
         {{ toggleLabel }}
-        <button class="font-semibold text-blue-600" @click="toggleMode">
+        <button class="font-medium text-terra-700 hover:text-terra-800 dark:text-terra-400" @click="toggleMode">
           {{ isLogin.value ? 'Daftar sekarang' : 'Masuk sekarang' }}
         </button>
       </p>

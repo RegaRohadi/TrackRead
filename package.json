@@ -17,8 +17,10 @@
     "format": "oxfmt src/"
   },
   "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.19.0",
+    "pdfjs-dist": "^4.10.38",
     "pinia": "^4.0.2",
     "sweetalert2": "^11.26.25",
     "tailwindcss": "^4.3.3",

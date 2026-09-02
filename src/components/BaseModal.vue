@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, watch } from "vue";
+import { PhX } from "@phosphor-icons/vue";
 
 const props = defineProps<{
   show: boolean;
@@ -48,53 +49,41 @@ onUnmounted(() => {
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
         @click.self="handleOverlayClick"
       >
         <Transition
-          enter-active-class="transition ease-out duration-200"
-          enter-from-class="opacity-0 scale-95 translate-y-2"
-          enter-to-class="opacity-100 scale-100 translate-y-0"
-          leave-active-class="transition ease-in duration-150"
-          leave-from-class="opacity-100 scale-100 translate-y-0"
-          leave-to-class="opacity-0 scale-95 translate-y-2"
+          enter-active-class="transition ease-out duration-150"
+          enter-from-class="opacity-0 translate-y-1"
+          enter-to-class="opacity-100 translate-y-0"
+          leave-active-class="transition ease-in duration-100"
+          leave-from-class="opacity-100 translate-y-0"
+          leave-to-class="opacity-0 translate-y-1"
         >
           <div
             v-if="show"
-            class="relative w-full max-w-2xl rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 max-h-[90vh] overflow-y-auto"
+            class="relative w-full max-w-2xl rounded-[0.375rem] border border-base-200 bg-white max-h-[90vh] overflow-y-auto dark:bg-base-900 dark:border-base-800"
             role="dialog"
             aria-modal="true"
           >
             <!-- Header -->
             <div
-              class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-gray-100 bg-white/90 backdrop-blur px-6 py-4"
+              class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-base-200 px-6 py-4 dark:border-base-800"
             >
               <h2
                 v-if="title"
-                class="text-lg font-semibold text-gray-900 truncate"
+                class="truncate text-lg font-semibold text-base-900 dark:text-base-100"
               >
                 {{ title }}
               </h2>
               <span v-else />
 
               <button
-                class="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                aria-label="Close"
+                class="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-base-400 transition-colors hover:bg-base-100 hover:text-base-700 focus:outline-none focus:ring-2 focus:ring-base-300 dark:text-base-500 dark:hover:bg-base-800 dark:hover:text-base-200 dark:focus:ring-base-600"
+                aria-label="Tutup"
                 @click="emit('close')"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <PhX :size="18" weight="bold" />
               </button>
             </div>
 
@@ -106,7 +95,7 @@ onUnmounted(() => {
             <!-- Footer (optional) -->
             <div
               v-if="$slots.footer"
-              class="sticky bottom-0 flex justify-end gap-3 border-t border-gray-100 bg-white/90 backdrop-blur px-6 py-4"
+              class="sticky bottom-0 flex justify-end gap-3 border-t border-base-200 bg-white px-6 py-4 dark:border-base-800 dark:bg-base-900"
             >
               <slot name="footer" />
             </div>

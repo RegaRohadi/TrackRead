@@ -57,7 +57,7 @@ Modern Single Page Application (SPA) for **TrackRead** — a personal book manag
    ```bash
    cp .env.example .env
    ```
-   *By default, the frontend connects to backend at `http://localhost:8000/api/v1`.*
+   *By default, the frontend connects to backend at `http://localhost:8001/api/v1`.*
 
 3. **Start Development Server:**
    ```bash
