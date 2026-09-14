@@ -11,11 +11,12 @@ export function useBooks() {
   const selectedGenre = ref("");
   const selectedStatus = ref<string>("");
   const selectedSource = ref<"" | BookSource>("");
+  const sort = ref<"newest" | "oldest" | "title" | "author">("newest");
   const stats = ref<ReadingStats | null>(null);
   const yearlyGoal = ref<number>(Number(localStorage.getItem("trackread_yearly_goal") || "12"));
 
   const page = ref(1);
-  const perPage = ref(9);
+  const perPage = ref(12);
   const total = ref(0);
   const lastPage = ref(1);
   const loading = ref(false);
@@ -140,8 +141,8 @@ export function useBooks() {
     }
   };
 
-  const getBooks = async (pageNumber = page.value) => {
-    loading.value = true;
+  const getBooks = async (pageNumber = page.value, append = false) => {
+    loading.value = !append;
     page.value = pageNumber;
     try {
       const params: Record<string, unknown> = {
@@ -151,10 +152,11 @@ export function useBooks() {
       if (selectedGenre.value) params.genre = selectedGenre.value;
       if (selectedStatus.value) params.status = selectedStatus.value;
       if (selectedSource.value) params.source = selectedSource.value;
+      if (sort.value) params.sort = sort.value;
       const response = searchQuery.value.trim()
         ? await BookService.search(searchQuery.value, params)
         : await BookService.getAll(params);
-      books.value = response.data;
+      books.value = append ? [...books.value, ...response.data] : response.data;
       total.value = Number(response.meta?.total ?? books.value.length);
       lastPage.value = Number(response.meta?.last_page ?? 1);
     } catch (error: unknown) {
@@ -163,6 +165,11 @@ export function useBooks() {
     } finally {
       loading.value = false;
     }
+  };
+
+  const loadMore = async () => {
+    if (page.value >= lastPage.value) return;
+    await getBooks(page.value + 1, true);
   };
 
   const getContinueReading = async () => {
@@ -440,6 +447,11 @@ export function useBooks() {
     await getBooks(1);
   };
 
+  const setSort = async (value: "newest" | "oldest" | "title" | "author") => {
+    sort.value = value;
+    await getBooks(1);
+  };
+
   const setSearch = async (query: string) => {
     searchQuery.value = query;
     await getBooks(1);
@@ -456,6 +468,7 @@ export function useBooks() {
     selectedGenre,
     selectedStatus,
     selectedSource,
+    sort,
     stats,
     yearlyGoal,
     searchQuery,
@@ -474,6 +487,7 @@ export function useBooks() {
     showForm,
     isEdit,
     getBooks,
+    loadMore,
     getGenres,
     getStats,
     getContinueReading,
@@ -481,6 +495,7 @@ export function useBooks() {
     setGenre,
     setStatus,
     setSource,
+    setSort,
     setSearch,
     clearSearch,
     setYearlyGoal,

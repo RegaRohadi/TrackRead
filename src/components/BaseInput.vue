@@ -23,10 +23,9 @@ const emit = defineEmits<{
   <div class="mb-4">
     <label
       v-if="label"
-      class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300"
+      class="mb-1.5 block px-1 text-[13px] font-medium text-label2"
     >
-      {{ label }}
-      <span v-if="required" class="text-terra-600">*</span>
+      {{ label }}<span v-if="required" class="text-red"> *</span>
     </label>
 
     <input
@@ -35,10 +34,10 @@ const emit = defineEmits<{
       :placeholder="placeholder"
       :required="required"
       @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-      class="w-full rounded-[0.25rem] border border-base-300 bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:border-terra-600 focus:outline-none focus:ring-1 focus:ring-terra-600 dark:border-base-700 dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
+      class="w-full rounded-[10px] bg-fill px-3.5 py-2.5 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
     />
 
-    <p v-if="error" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ error }}</p>
-    <p v-else-if="hint" class="mt-1 text-xs text-base-400 dark:text-base-500">{{ hint }}</p>
+    <p v-if="error" class="mt-1 px-1 text-[13px] text-red">{{ error }}</p>
+    <p v-else-if="hint" class="mt-1 px-1 text-[13px] text-label2">{{ hint }}</p>
   </div>
 </template>

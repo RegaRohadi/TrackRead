@@ -5,10 +5,12 @@ import { PhSun, PhMoon } from '@phosphor-icons/vue';
 
 import { useAuthStore } from '@/stores/auth';
 import { useTheme } from '@/composables/useTheme';
+import SegmentedControl from '@/components/ios/SegmentedControl.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const { theme, toggleTheme } = useTheme();
+const logo = "/logo-mark.png";
 
 const isLogin = reactive({ value: true });
 const form = reactive({
@@ -76,18 +78,13 @@ function touchAll() {
 
 async function submit() {
   touchAll();
-
-  if (!isFormValid.value) {
-    return;
-  }
-
+  if (!isFormValid.value) return;
   try {
     if (isLogin.value) {
       await authStore.login(form.email, form.password);
     } else {
       await authStore.register(form.name, form.email, form.password, form.passwordConfirmation);
     }
-
     await router.push({ name: 'books' });
   } catch {
     // error handled by store
@@ -104,137 +101,107 @@ function toggleMode() {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen items-center justify-center bg-base-100 px-4 py-8 transition-colors dark:bg-base-950">
+  <div class="relative flex min-h-screen items-center justify-center bg-grouped px-4 py-10">
     <button
       @click="toggleTheme"
-      class="absolute top-5 right-5 flex h-9 w-9 items-center justify-center border border-base-300 bg-white text-base-600 transition-colors hover:bg-base-100 dark:border-base-700 dark:bg-base-900 dark:text-base-300 dark:hover:bg-base-800"
+      class="absolute top-5 right-5 grid h-9 w-9 place-items-center rounded-full bg-fill text-label2 active:opacity-70"
       :aria-label="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
       :title="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
     >
-      <PhMoon v-if="theme === 'dark'" :size="16" weight="duotone" />
-      <PhSun v-else :size="16" weight="duotone" />
+      <PhMoon v-if="theme === 'dark'" :size="18" weight="fill" />
+      <PhSun v-else :size="18" weight="fill" />
     </button>
 
-    <div class="w-full max-w-md border border-base-200 bg-white p-8 dark:border-base-800 dark:bg-base-900">
-      <div class="border-b border-base-200 pb-6 dark:border-base-800">
-        <p class="mb-1 text-[11px] font-medium tracking-[0.2em] text-terra-700 uppercase dark:text-terra-400">
-          TrackRead
+    <div class="w-full max-w-sm">
+      <div class="mb-8 flex flex-col items-center text-center">
+        <img :src="logo" alt="TrackRead" class="h-20 w-20 rounded-[20px] shadow-[0_10px_28px_rgba(78,90,43,0.22)]" />
+        <p class="font-logo mt-4 text-[30px] leading-none font-semibold tracking-[-0.01em]">
+          <span class="text-[#4E5A2B] dark:text-[#C3CF95]">Track</span><span class="text-[#B0562C] dark:text-[#D27A4E]">Read</span>
         </p>
-        <h1 class="font-display text-3xl font-semibold text-base-900 dark:text-base-50">
-          {{ isLogin.value ? 'Masuk' : 'Buat akun' }}
-        </h1>
-        <p class="mt-1 text-sm text-base-500 dark:text-base-400">
-          {{ isLogin.value ? 'Kelola koleksi buku Anda.' : 'Mulai melacak bacaan Anda.' }}
-        </p>
+        <p class="mt-2 text-[10px] font-semibold tracking-[0.22em] text-[#4E5A2B]/70 uppercase dark:text-[#C3CF95]/70">Track your reading. Grow every day.</p>
       </div>
+      <h1 class="sr-only">{{ isLogin ? 'Masuk' : 'Buat Akun' }}</h1>
 
-      <div class="mt-6 flex border border-base-300 dark:border-base-700">
-        <button
-          class="flex-1 px-3 py-2 text-sm font-medium transition-colors"
-          :class="isLogin.value ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'text-base-600 hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800'"
-          @click="isLogin.value = true"
-        >
-          Masuk
-        </button>
-        <button
-          class="flex-1 px-3 py-2 text-sm font-medium transition-colors"
-          :class="!isLogin.value ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'text-base-600 hover:bg-base-100 dark:text-base-300 dark:hover:bg-base-800'"
-          @click="isLogin.value = false"
-        >
-          Daftar
-        </button>
-      </div>
+      <SegmentedControl
+        :model-value="isLogin.value ? 'masuk' : 'daftar'"
+        :options="[{ value: 'masuk', label: 'Masuk' }, { value: 'daftar', label: 'Daftar' }]"
+        @update:model-value="(v) => { if ((v === 'daftar') !== !isLogin.value) toggleMode(); }"
+      />
 
-      <form class="mt-6 space-y-4" @submit.prevent="submit" novalidate>
+      <form class="mt-5 space-y-3" @submit.prevent="submit" novalidate>
         <div v-if="!isLogin.value">
-          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Nama</label>
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Nama</label>
           <input
             v-model="form.name"
             type="text"
-            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
-            :class="touched.name && nameError
-              ? 'border-red-500 dark:border-red-600'
-              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
+            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+            :class="touched.name && nameError ? 'ring-2 ring-red' : ''"
             placeholder="Nama lengkap"
             required
             @blur="touched.name = true"
           />
-          <p v-if="touched.name && nameError" class="mt-1 text-xs text-red-600 dark:text-red-400">
-            {{ nameError }}
-          </p>
+          <p v-if="touched.name && nameError" class="mt-1 px-1 text-[13px] text-red">{{ nameError }}</p>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Email</label>
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Email</label>
           <input
             v-model="form.email"
             type="email"
-            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
-            :class="touched.email && emailError
-              ? 'border-red-500 dark:border-red-600'
-              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
+            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+            :class="touched.email && emailError ? 'ring-2 ring-red' : ''"
             placeholder="email@example.com"
             required
             @blur="touched.email = true"
           />
-          <p v-if="touched.email && emailError" class="mt-1 text-xs text-red-600 dark:text-red-400">
-            {{ emailError }}
-          </p>
+          <p v-if="touched.email && emailError" class="mt-1 px-1 text-[13px] text-red">{{ emailError }}</p>
         </div>
 
         <div>
-          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Password</label>
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Password</label>
           <input
             v-model="form.password"
             type="password"
-            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
-            :class="touched.password && passwordError
-              ? 'border-red-500 dark:border-red-600'
-              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
+            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+            :class="touched.password && passwordError ? 'ring-2 ring-red' : ''"
             placeholder="Minimal 8 karakter"
             required
             @blur="touched.password = true"
           />
-          <p v-if="touched.password && passwordError" class="mt-1 text-xs text-red-600 dark:text-red-400">
-            {{ passwordError }}
-          </p>
+          <p v-if="touched.password && passwordError" class="mt-1 px-1 text-[13px] text-red">{{ passwordError }}</p>
         </div>
 
         <div v-if="!isLogin.value">
-          <label class="mb-1.5 block text-sm font-medium text-base-700 dark:text-base-300">Konfirmasi Password</label>
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Konfirmasi Password</label>
           <input
             v-model="form.passwordConfirmation"
             type="password"
-            class="w-full rounded-[0.25rem] border bg-white px-3 py-2 text-sm text-base-800 transition-colors placeholder:text-base-400 focus:outline-none dark:bg-base-900 dark:text-base-100 dark:placeholder:text-base-500"
-            :class="touched.passwordConfirmation && passwordConfirmationError
-              ? 'border-red-500 dark:border-red-600'
-              : 'border-base-300 focus:border-terra-700 dark:border-base-700 dark:focus:border-terra-500'"
+            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+            :class="touched.passwordConfirmation && passwordConfirmationError ? 'ring-2 ring-red' : ''"
             placeholder="Ulangi password"
             required
             @blur="touched.passwordConfirmation = true"
           />
-          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 text-xs text-red-600 dark:text-red-400">
-            {{ passwordConfirmationError }}
-          </p>
+          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 px-1 text-[13px] text-red">{{ passwordConfirmationError }}</p>
         </div>
 
-        <p v-if="authStore.error" class="border-l-2 border-red-600 bg-red-50 px-3 py-2 text-sm text-red-600 dark:border-red-500 dark:bg-red-950 dark:text-red-400">
+        <p v-if="authStore.error" class="rounded-[10px] bg-red/10 px-3 py-2 text-[13px] font-medium text-red">
           {{ authStore.error }}
         </p>
 
         <button
           type="submit"
-          class="w-full border border-terra-700 bg-terra-700 px-4 py-2.5 font-medium text-white transition-colors hover:bg-terra-800 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-[12px] bg-blue px-4 py-3.5 text-[17px] font-semibold text-white transition-opacity active:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
           :disabled="authStore.loading"
         >
           {{ authStore.loading ? 'Memproses...' : submitLabel }}
         </button>
       </form>
 
-      <p class="mt-5 text-center text-sm text-base-500 dark:text-base-400">
+      <p class="mt-6 text-center text-[15px] text-label2">
         {{ toggleLabel }}
-        <button class="font-medium text-terra-700 hover:text-terra-800 dark:text-terra-400" @click="toggleMode">
-          {{ isLogin.value ? 'Daftar sekarang' : 'Masuk sekarang' }}
+        <button class="font-semibold text-blue active:opacity-60" @click="toggleMode">
+          {{ isLogin.value ? 'Daftar' : 'Masuk' }}
         </button>
       </p>
     </div>

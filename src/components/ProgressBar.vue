@@ -22,26 +22,29 @@ const progress = computed(() => {
   return Math.min(100, Math.round((safeValue.value / safeTotal.value) * 100));
 });
 
-const colorClass = computed(() => ({
-  terra: "bg-terra-600",
-  emerald: "bg-emerald-500",
+const barClass = computed(() => ({
+  terra: "bg-blue",
+  emerald: "bg-green",
 })[props.color]);
 </script>
 
 <template>
-  <div class="space-y-1">
-    <div
-      v-if="showLabel"
-      class="flex justify-between text-xs text-base-500 dark:text-base-400"
-    >
-      <span>{{ safeValue }} / {{ safeTotal }} pages</span>
-      <span>{{ progress }}%</span>
+  <div class="space-y-1.5">
+    <div v-if="showLabel" class="flex justify-between text-[13px] text-label2">
+      <span>hal {{ safeValue }} / {{ safeTotal }}</span>
+      <span class="tabular-nums">{{ progress }}%</span>
     </div>
 
-    <div class="h-1.5 w-full overflow-hidden rounded-full bg-base-100 dark:bg-base-800">
+    <div
+      class="h-1.5 w-full overflow-hidden rounded-full bg-gray5"
+      role="progressbar"
+      :aria-valuenow="progress"
+      aria-valuemin="0"
+      aria-valuemax="100"
+    >
       <div
         class="h-full rounded-full transition-all duration-300"
-        :class="colorClass"
+        :class="barClass"
         :style="{ width: `${progress}%` }"
       />
     </div>

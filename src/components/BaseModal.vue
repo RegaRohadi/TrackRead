@@ -22,7 +22,6 @@ function handleEscape(e: KeyboardEvent) {
   if (e.key === "Escape" && props.show) emit("close");
 }
 
-// Prevent background scroll when modal is open
 watch(
   () => props.show,
   (isOpen) => {
@@ -49,53 +48,41 @@ onUnmounted(() => {
     >
       <div
         v-if="show"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        class="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4"
         @click.self="handleOverlayClick"
       >
         <Transition
-          enter-active-class="transition ease-out duration-150"
-          enter-from-class="opacity-0 translate-y-1"
-          enter-to-class="opacity-100 translate-y-0"
-          leave-active-class="transition ease-in duration-100"
-          leave-from-class="opacity-100 translate-y-0"
-          leave-to-class="opacity-0 translate-y-1"
+          enter-active-class="transition ease-out duration-200"
+          enter-from-class="translate-y-6 opacity-0 sm:translate-y-2"
+          enter-to-class="translate-y-0 opacity-100"
+          leave-active-class="transition ease-in duration-150"
+          leave-from-class="translate-y-0 opacity-100"
+          leave-to-class="translate-y-6 opacity-0 sm:translate-y-2"
         >
           <div
             v-if="show"
-            class="relative w-full max-w-2xl rounded-[0.375rem] border border-base-200 bg-white max-h-[90vh] overflow-y-auto dark:bg-base-900 dark:border-base-800"
+            class="flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[16px] bg-card pb-[env(safe-area-inset-bottom)] sm:rounded-[16px]"
             role="dialog"
             aria-modal="true"
           >
-            <!-- Header -->
-            <div
-              class="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-base-200 px-6 py-4 dark:border-base-800"
-            >
-              <h2
-                v-if="title"
-                class="truncate text-lg font-semibold text-base-900 dark:text-base-100"
-              >
-                {{ title }}
-              </h2>
-              <span v-else />
-
+            <div class="relative flex h-12 shrink-0 items-center justify-center border-b border-sep px-12">
+              <h2 v-if="title" class="truncate text-[17px] font-semibold text-label">{{ title }}</h2>
               <button
-                class="ml-auto flex h-8 w-8 items-center justify-center rounded-full text-base-400 transition-colors hover:bg-base-100 hover:text-base-700 focus:outline-none focus:ring-2 focus:ring-base-300 dark:text-base-500 dark:hover:bg-base-800 dark:hover:text-base-200 dark:focus:ring-base-600"
+                class="absolute right-2 grid h-8 w-8 place-items-center rounded-full bg-fill text-label2 transition-colors active:opacity-70"
                 aria-label="Tutup"
                 @click="emit('close')"
               >
-                <PhX :size="18" weight="bold" />
+                <PhX :size="15" weight="bold" />
               </button>
             </div>
 
-            <!-- Content -->
-            <div class="p-6">
+            <div class="overflow-y-auto p-5">
               <slot />
             </div>
 
-            <!-- Footer (optional) -->
             <div
               v-if="$slots.footer"
-              class="sticky bottom-0 flex justify-end gap-3 border-t border-base-200 bg-white px-6 py-4 dark:border-base-800 dark:bg-base-900"
+              class="flex justify-end gap-2 border-t border-sep px-5 py-4"
             >
               <slot name="footer" />
             </div>

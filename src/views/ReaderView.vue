@@ -316,69 +316,68 @@ async function back() {
 </script>
 
 <template>
-  <div ref="containerRef" class="min-h-screen bg-base-50 dark:bg-base-950">
-    <div class="sticky top-0 z-20 border-b border-base-200 bg-white dark:border-base-800 dark:bg-base-900">
-      <div class="h-1 w-full bg-base-100 dark:bg-base-800"><div class="h-full bg-terra-600 transition-all duration-300" :style="{ width: progressPercent + '%' }"></div></div>
-      <div class="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-2 sm:px-8">
-        <button class="inline-flex items-center gap-1.5 rounded border border-base-300 bg-white px-2.5 py-1.5 text-xs font-medium text-base-700 hover:bg-base-100 dark:border-base-700 dark:bg-base-900 dark:text-base-200" @click="back"><PhArrowLeft :size="14" weight="bold" /> Kembali</button>
-        <div class="min-w-0 flex-1 truncate text-sm font-medium text-base-800 dark:text-base-100">{{ book?.name || "Reader" }}<span v-if="saving" class="ml-2 text-[11px] font-normal text-terra-600">menyimpan...</span></div>
-        <div class="hidden items-center gap-1 text-xs text-base-500 sm:flex">Hal {{ currentPage }} / {{ totalPages || "?" }} • {{ progressPercent }}%</div>
-        <div class="flex items-center overflow-hidden rounded border border-base-300 text-xs font-medium">
-          <button class="inline-flex items-center gap-1 px-2.5 py-1.5" :class="mode === 'page' ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'bg-white text-base-600 hover:bg-base-50 dark:bg-base-900 dark:text-base-300'" @click="setMode('page')" title="Mode halaman (Next/Prev)"><PhCards :size="14" weight="bold" /> Halaman</button>
-          <button class="inline-flex items-center gap-1 border-l border-base-300 px-2.5 py-1.5" :class="mode === 'scroll' ? 'bg-base-900 text-white dark:bg-base-100 dark:text-base-900' : 'bg-white text-base-600 hover:bg-base-50 dark:bg-base-900 dark:text-base-300'" @click="setMode('scroll')" title="Mode gulir (scroll semua halaman)"><PhList :size="14" weight="bold" /> Gulir</button>
+  <div ref="containerRef" class="min-h-screen bg-grouped">
+    <div class="sticky top-0 z-20">
+      <div class="flex h-11 flex-wrap items-center gap-1 border-b border-sep px-2 backdrop-blur-xl" style="background: var(--ios-bar)">
+        <button class="flex shrink-0 items-center gap-0.5 text-[17px] text-blue active:opacity-60" @click="back">
+          <PhArrowLeft :size="18" weight="bold" /> Katalog
+        </button>
+        <div class="min-w-0 flex-1 truncate px-1 text-center text-[16px] font-semibold text-label">
+          {{ book?.name || "Reader" }}<span v-if="saving" class="ml-1.5 text-[12px] font-normal text-label2">menyimpan…</span>
         </div>
-        <div class="flex items-center gap-1">
-          <button class="inline-flex h-7 w-7 items-center justify-center border border-base-300 bg-white hover:bg-base-100 dark:border-base-700 dark:bg-base-900" @click="zoom(-0.15)" title="Zoom out"><PhMagnifyingGlassMinus :size="14" /></button>
-          <span class="w-10 text-center text-xs font-medium text-base-600 dark:text-base-300">{{ Math.round(scale * 100) }}%</span>
-          <button class="inline-flex h-7 w-7 items-center justify-center border border-base-300 bg-white hover:bg-base-100 dark:border-base-700 dark:bg-base-900" @click="zoom(0.15)" title="Zoom in"><PhMagnifyingGlassPlus :size="14" /></button>
-          <button class="ml-1 inline-flex h-7 w-7 items-center justify-center border border-base-300 bg-white hover:bg-base-100 dark:border-base-700 dark:bg-base-900" @click="toggleFullscreen" title="Fullscreen"><PhArrowsOut :size="14" /></button>
+        <div class="flex shrink-0 items-center gap-0.5">
+          <button class="grid h-8 w-8 place-items-center rounded-full text-blue active:opacity-60" @click="zoom(-0.15)" title="Perkecil"><PhMagnifyingGlassMinus :size="17" weight="bold" /></button>
+          <span class="w-9 text-center text-[12px] text-label2 tabular-nums">{{ Math.round(scale * 100) }}%</span>
+          <button class="grid h-8 w-8 place-items-center rounded-full text-blue active:opacity-60" @click="zoom(0.15)" title="Perbesar"><PhMagnifyingGlassPlus :size="17" weight="bold" /></button>
+          <button class="grid h-8 w-8 place-items-center rounded-full text-blue active:opacity-60" @click="toggleFullscreen" title="Layar penuh"><PhArrowsOut :size="16" weight="bold" /></button>
+        </div>
+        <div class="flex w-full shrink-0 items-center justify-center gap-1 pb-1.5">
+          <button class="rounded-full px-3 py-1 text-[13px] font-semibold transition-colors" :class="mode === 'page' ? 'bg-blue text-white' : 'bg-fill text-label'" @click="setMode('page')"><PhCards :size="13" weight="bold" class="mr-1 inline" />Halaman</button>
+          <button class="rounded-full px-3 py-1 text-[13px] font-semibold transition-colors" :class="mode === 'scroll' ? 'bg-blue text-white' : 'bg-fill text-label'" @click="setMode('scroll')"><PhList :size="13" weight="bold" class="mr-1 inline" />Gulir</button>
         </div>
       </div>
+      <div class="h-0.5 w-full bg-gray5"><div class="h-full bg-blue transition-all duration-300" :style="{ width: progressPercent + '%' }"></div></div>
     </div>
 
-    <div v-if="loading" class="mx-auto max-w-6xl px-4 py-16 text-center text-base-400 sm:px-8">
-      <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-terra-600 border-t-transparent"></div>
-      <p class="mt-3 text-sm">Memuat PDF...</p>
+    <div v-if="loading" class="px-4 py-20 text-center">
+      <div class="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-gray3 border-t-transparent"></div>
+      <p class="mt-3 text-[15px] text-label2">Memuat PDF...</p>
     </div>
 
-    <div v-else-if="error" class="mx-auto max-w-6xl px-4 py-16 text-center sm:px-8">
-      <div class="mx-auto max-w-md rounded border border-amber-200 bg-amber-50 px-6 py-8 dark:border-amber-900 dark:bg-amber-950">
-        <PhBookOpen :size="32" weight="duotone" class="mx-auto text-amber-600" />
-        <p class="mt-3 text-sm font-medium text-amber-900 dark:text-amber-100">{{ error }}</p>
-        <button class="mt-4 inline-flex items-center gap-1.5 rounded bg-base-900 px-3 py-1.5 text-xs font-medium text-white dark:bg-base-100 dark:text-base-900" @click="back">Kembali ke Library</button>
+    <div v-else-if="error" class="px-4 py-16">
+      <div class="mx-auto max-w-sm rounded-[16px] bg-card px-6 py-8 text-center shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+        <PhBookOpen :size="34" class="mx-auto text-blue" />
+        <p class="mt-3 text-[15px] font-medium text-label">{{ error }}</p>
+        <button class="mt-4 rounded-[10px] bg-blue px-4 py-2 text-[15px] font-semibold text-white active:opacity-80" @click="back">Kembali ke Katalog</button>
       </div>
     </div>
 
-    <div v-else-if="mode === 'page'" class="mx-auto max-w-4xl px-2 py-4 sm:px-8">
-      <div v-if="pdfLoading" class="flex justify-center py-12 text-sm text-base-400"><span class="h-6 w-6 animate-spin rounded-full border-2 border-terra-600 border-t-transparent"></span><span class="ml-2">Merender halaman {{ currentPage }}...</span></div>
-      <div class="flex justify-center overflow-auto bg-white p-2 shadow-sm dark:bg-base-900 sm:p-4">
-        <canvas ref="canvasRef" class="max-w-full shadow"></canvas>
+    <div v-else-if="mode === 'page'" class="mx-auto max-w-4xl px-3 py-4">
+      <div v-if="pdfLoading" class="flex items-center justify-center gap-2 py-12 text-[15px] text-label2"><span class="h-5 w-5 animate-spin rounded-full border-2 border-gray3 border-t-transparent"></span> Merender halaman {{ currentPage }}...</div>
+      <div class="flex justify-center overflow-auto rounded-[14px] bg-card p-2 shadow-[0_1px_2px_rgba(0,0,0,0.06)] sm:p-4">
+        <canvas ref="canvasRef" class="max-w-full rounded-[4px] shadow-[0_2px_12px_rgba(0,0,0,0.18)]"></canvas>
       </div>
     </div>
 
-    <div v-else class="mx-auto flex max-w-4xl flex-col px-2 py-2 sm:px-8">
-      <p class="mb-2 text-center text-[11px] text-base-400">Mode gulir — scroll untuk baca, halaman aktif otomatis tersimpan</p>
-      <div ref="scrollContainerRef" class="h-[calc(100vh-160px)] space-y-4 overflow-auto rounded border border-base-200 bg-base-100 p-3 dark:border-base-800 dark:bg-base-900">
-        <div v-if="pdfLoading" class="flex justify-center py-8 text-sm text-base-400"><span class="h-6 w-6 animate-spin rounded-full border-2 border-terra-600 border-t-transparent"></span><span class="ml-2">Merender {{ totalPages }} halaman...</span></div>
+    <div v-else class="mx-auto flex max-w-4xl flex-col px-3 py-2">
+      <p class="mb-2 text-center text-[13px] text-label2">Mode gulir — halaman aktif tersimpan otomatis</p>
+      <div ref="scrollContainerRef" class="h-[calc(100vh-170px)] space-y-4 overflow-auto rounded-[14px] bg-card p-3">
+        <div v-if="pdfLoading" class="flex items-center justify-center gap-2 py-8 text-[15px] text-label2"><span class="h-5 w-5 animate-spin rounded-full border-2 border-gray3 border-t-transparent"></span> Merender {{ totalPages }} halaman...</div>
         <div v-for="n in totalPages" :key="n" :data-page="n" class="flex flex-col items-center">
-          <span class="mb-1 text-[10px] font-medium tracking-wide text-base-400">HAL {{ n }}/{{ totalPages }}</span>
-          <canvas :ref="(el) => setPageCanvas(n, el)" class="max-w-full bg-white shadow dark:bg-base-900"></canvas>
+          <span class="mb-1 text-[11px] font-medium text-label2 tabular-nums">HAL {{ n }}/{{ totalPages }}</span>
+          <canvas :ref="(el) => setPageCanvas(n, el)" class="max-w-full rounded-[4px] bg-white shadow-[0_2px_12px_rgba(0,0,0,0.18)]"></canvas>
         </div>
       </div>
     </div>
 
-    <div v-if="!loading && !error" class="sticky bottom-0 z-20 border-t border-base-200 bg-white px-4 py-2 dark:border-base-800 dark:bg-base-900 sm:px-8">
-      <div class="mx-auto flex max-w-6xl items-center justify-between gap-2">
-        <button class="inline-flex items-center gap-1 rounded border border-base-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-base-100 disabled:opacity-40 dark:border-base-700 dark:bg-base-900 dark:hover:bg-base-800" :disabled="currentPage <= 1" @click="go(-1)"><PhCaretLeft :size="14" weight="bold" /> Prev</button>
-        <div class="flex items-center gap-2">
-          <input v-model="jumpInput" @keydown.enter="jump" @blur="jump" type="number" :min="1" :max="totalPages || undefined" class="w-16 rounded border border-base-300 bg-white px-2 py-1 text-center text-xs dark:border-base-700 dark:bg-base-900" />
-          <span class="text-xs text-base-500">/ {{ totalPages || "?" }}</span>
-          <input type="range" :min="1" :max="totalPages || 1" :value="currentPage" @input="currentPage = Number(($event.target as HTMLInputElement).value); onSliderInput()" class="hidden h-1 w-24 accent-terra-600 sm:block" />
-          <span class="hidden text-[11px] text-base-400 sm:inline">{{ mode === 'scroll' ? 'Gulir' : 'Halaman' }}</span>
-        </div>
-        <button class="inline-flex items-center gap-1 rounded border border-base-300 bg-white px-3 py-1.5 text-xs font-medium hover:bg-base-100 disabled:opacity-40 dark:border-base-700 dark:bg-base-900 dark:hover:bg-base-800" :disabled="!!totalPages && currentPage >= totalPages" @click="go(1)">Next <PhCaretRight :size="14" weight="bold" /></button>
+    <div v-if="!loading && !error" class="sticky bottom-0 z-20 border-t border-sep px-4 py-2.5 backdrop-blur-xl" style="background: var(--ios-bar)">
+      <div class="mx-auto flex max-w-4xl items-center gap-3">
+        <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-fill text-blue active:opacity-70 disabled:opacity-30" :disabled="currentPage <= 1" @click="go(-1)"><PhCaretLeft :size="17" weight="bold" /></button>
+        <input type="range" :min="1" :max="totalPages || 1" :value="currentPage" @input="currentPage = Number(($event.target as HTMLInputElement).value); onSliderInput()" class="h-1.5 flex-1 accent-blue" />
+        <button class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-fill text-blue active:opacity-70 disabled:opacity-30" :disabled="!!totalPages && currentPage >= totalPages" @click="go(1)"><PhCaretRight :size="17" weight="bold" /></button>
+        <input v-model="jumpInput" @keydown.enter="jump" @blur="jump" type="number" :min="1" :max="totalPages || undefined" class="w-14 shrink-0 rounded-[8px] bg-fill px-2 py-1.5 text-center text-[14px] text-label tabular-nums focus:outline-none focus:ring-2 focus:ring-blue" />
       </div>
-      <p class="mt-1 text-center text-[11px] text-base-400">← → pindah halaman • +/- zoom • auto-save 500ms • Toggle Halaman/Gulir di atas</p>
+      <p class="mt-1 text-center text-[12px] text-label2">Hal {{ currentPage }} / {{ totalPages || "?" }} · {{ progressPercent }}% · {{ mode === 'scroll' ? 'Gulir' : 'Halaman' }}</p>
     </div>
   </div>
 </template>

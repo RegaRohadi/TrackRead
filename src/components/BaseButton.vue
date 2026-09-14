@@ -21,22 +21,22 @@ withDefaults(defineProps<Props>(), {
     :type="type"
     :disabled="disabled || loading"
     :class="[
-      'inline-flex items-center justify-center gap-1.5 rounded-[0.25rem] border font-medium transition-colors',
-      'focus:outline-none focus-visible:ring-2 focus-visible:ring-terra-500 focus-visible:ring-offset-2 focus-visible:ring-offset-base-50 dark:focus-visible:ring-offset-base-950',
-      size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
+      'inline-flex items-center justify-center gap-1.5 font-semibold transition-colors',
+      size === 'sm' ? 'rounded-[8px] px-3 py-1.5 text-[13px]' : 'rounded-[10px] px-4 py-2.5 text-[15px]',
 
-      variant === 'primary' &&
-        'border-terra-700 bg-terra-700 text-white hover:bg-terra-800',
-      variant === 'secondary' &&
-        'border-base-300 bg-white text-base-700 hover:bg-base-100 dark:border-base-700 dark:bg-base-900 dark:text-base-200 dark:hover:bg-base-800',
-      variant === 'ghost' &&
-        'border-transparent bg-transparent text-terra-700 hover:bg-terra-50 dark:text-terra-400 dark:hover:bg-terra-950',
-      variant === 'danger' &&
-        'border-red-700 bg-red-700 text-white hover:bg-red-800',
+      variant === 'primary' && 'bg-blue text-white active:opacity-80',
+      variant === 'secondary' && 'bg-fill text-blue active:opacity-70',
+      variant === 'ghost' && 'text-blue active:opacity-60',
+      variant === 'danger' && 'text-red active:opacity-60',
 
-      (disabled || loading) && 'cursor-not-allowed opacity-50'
+      (disabled || loading) && 'cursor-not-allowed opacity-40'
     ]"
   >
+    <span
+      v-if="loading"
+      class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+      aria-hidden="true"
+    />
     <slot />
   </button>
 </template>

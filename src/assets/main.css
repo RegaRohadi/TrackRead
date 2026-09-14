@@ -2,70 +2,126 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --color-base-50: #f5f5f5;
-  --color-base-100: #dff1f1;
-  --color-base-200: #bbd5da;
-  --color-base-300: #a8c3c8;
-  --color-base-400: #8eaeb3;
-  --color-base-500: #6d959b;
-  --color-base-600: #557983;
-  --color-base-700: #415c66;
-  --color-base-800: #2c3f46;
-  --color-base-900: #1a262a;
-  --color-base-950: #0f1a1e;
+/* iOS system color tokens (light) */
+:root {
+  --ios-bg: #ffffff;
+  --ios-bg2: #f2f2f7;
+  --ios-grouped: #f2f2f7;
+  --ios-card: #ffffff;
+  --ios-label: #000000;
+  --ios-label2: rgba(60, 60, 67, 0.6);
+  --ios-label3: rgba(60, 60, 67, 0.3);
+  --ios-sep: rgba(60, 60, 67, 0.29);
+  --ios-blue: #007aff;
+  --ios-red: #ff3b30;
+  --ios-green: #34c759;
+  --ios-orange: #ff9500;
+  --ios-gray: #8e8e93;
+  --ios-gray2: #aeaeb2;
+  --ios-gray3: #c7c7cc;
+  --ios-gray4: #d1d1d6;
+  --ios-gray5: #e5e5ea;
+  --ios-gray6: #f2f2f7;
+  --ios-fill: rgba(120, 120, 128, 0.12);
+  --ios-fill2: rgba(120, 120, 128, 0.16);
+  --ios-bar: rgba(249, 249, 249, 0.94);
+  --ios-search: rgba(118, 118, 128, 0.12);
+}
 
-  --color-terra-50: #fff2f2;
-  --color-terra-100: #ffdbdb;
-  --color-terra-200: #ffb8b8;
-  --color-terra-300: #ff8a8a;
-  --color-terra-400: #ff5c5c;
-  --color-terra-500: #ff2e2e;
-  --color-terra-600: #ff0000;
-  --color-terra-700: #cc0000;
-  --color-terra-800: #990000;
-  --color-terra-900: #660000;
-  --color-terra-950: #380000;
+.dark {
+  --ios-bg: #000000;
+  --ios-bg2: #1c1c1e;
+  --ios-grouped: #000000;
+  --ios-card: #1c1c1e;
+  --ios-label: #ffffff;
+  --ios-label2: rgba(235, 235, 245, 0.6);
+  --ios-label3: rgba(235, 235, 245, 0.3);
+  --ios-sep: rgba(84, 84, 88, 0.65);
+  --ios-blue: #0a84ff;
+  --ios-red: #ff453a;
+  --ios-green: #30d158;
+  --ios-orange: #ff9f0a;
+  --ios-gray: #8e8e93;
+  --ios-gray2: #636366;
+  --ios-gray3: #48484a;
+  --ios-gray4: #3a3a3c;
+  --ios-gray5: #2c2c2e;
+  --ios-gray6: #1c1c1e;
+  --ios-fill: rgba(120, 120, 128, 0.24);
+  --ios-fill2: rgba(120, 120, 128, 0.32);
+  --ios-bar: rgba(30, 30, 30, 0.94);
+  --ios-search: rgba(118, 118, 128, 0.24);
+}
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-    Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+@theme inline {
+  --color-bg: var(--ios-bg);
+  --color-bg2: var(--ios-bg2);
+  --color-grouped: var(--ios-grouped);
+  --color-card: var(--ios-card);
+  --color-label: var(--ios-label);
+  --color-label2: var(--ios-label2);
+  --color-label3: var(--ios-label3);
+  --color-sep: var(--ios-sep);
+  --color-blue: var(--ios-blue);
+  --color-red: var(--ios-red);
+  --color-green: var(--ios-green);
+  --color-orange: var(--ios-orange);
+  --color-gray: var(--ios-gray);
+  --color-gray2: var(--ios-gray2);
+  --color-gray3: var(--ios-gray3);
+  --color-gray4: var(--ios-gray4);
+  --color-gray5: var(--ios-gray5);
+  --color-gray6: var(--ios-gray6);
+  --color-fill: var(--ios-fill);
+  --color-fill2: var(--ios-fill2);
 
-  --radius-input: 0.25rem;
-  --radius-card: 0.375rem;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --font-logo: Georgia, "Iowan Old Style", "Times New Roman", serif;
 
-  --shadow-hairline: 0 0 0 1px rgb(187 213 218 / 0.5);
-  --shadow-nudge: 0 1px 2px 0 rgb(65 92 102 / 0.12);
+  --radius-sm: 0.625rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
 }
 
 @layer base {
   html {
+    -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-base-50 text-base-800 antialiased;
+    @apply bg-grouped text-label antialiased;
     font-family: var(--font-sans);
-  }
-
-  .dark body {
-    @apply bg-base-950 text-base-200;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   ::selection {
-    background-color: var(--color-terra-600);
-    color: white;
+    background-color: color-mix(in srgb, var(--ios-blue) 30%, transparent);
   }
 
-  .dark ::selection {
-    background-color: var(--color-terra-600);
-    color: white;
+  :focus-visible {
+    outline: 2px solid var(--ios-blue);
+    outline-offset: 2px;
+    border-radius: 4px;
   }
 
-  h1,
-  h2,
-  h3 {
-    font-family: var(--font-display);
+  input,
+  textarea,
+  select {
+    caret-color: var(--ios-blue);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ios-gray3) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: var(--ios-gray4) transparent;
   }
 }
 
