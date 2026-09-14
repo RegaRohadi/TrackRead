@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import GeneratedCover from "./GeneratedCover.vue";
+import { storageBaseUrl } from "@/services/backend";
 
 const props = defineProps<{
   cover?: string | null;
@@ -9,7 +10,7 @@ const props = defineProps<{
   author?: string | null;
 }>();
 
-const storageBase = import.meta.env.VITE_STORAGE_BASE_URL || "http://localhost:8001/storage";
+const storageBase = storageBaseUrl;
 const broken = ref(false);
 
 const imageSrc = computed<string | null>(() => {
