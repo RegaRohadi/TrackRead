@@ -18,6 +18,19 @@ import {
   PhTrash,
   PhClock,
   PhX,
+  PhCaretRight,
+  PhHeart,
+  PhFlask,
+  PhBriefcase,
+  PhGlobe,
+  PhGraduationCap,
+  PhPalette,
+  PhMusicNotes,
+  PhCode,
+  PhDetective,
+  PhSparkle,
+  PhScales,
+  PhNewspaper,
 } from "@phosphor-icons/vue";
 import { useBooks } from "@/composables/useBooks";
 import { useAuthStore } from "@/stores/auth";
@@ -106,6 +119,41 @@ function openStatus(status: string) {
 function openGenre(genre: string) {
   setGenre(genre);
   activeTab.value = "katalog";
+}
+function openAllBooks() {
+  selectedStatus.value = "";
+  selectedSource.value = "";
+  setGenre("");
+  activeTab.value = "katalog";
+}
+function getGenreIcon(genre: string) {
+  const value = genre.toLowerCase();
+  if (/(romance|romantis|romansa|cinta|love)/.test(value)) return PhHeart;
+  if (/(science|sains|ilmiah|flask|medis|kesehatan|health)/.test(value)) return PhFlask;
+  if (/(programming|pemrograman|coding|komputer|software|developer)/.test(value)) return PhCode;
+  if (/(bisnis|business|ekonomi|finance|keuangan|karier|career)/.test(value)) return PhBriefcase;
+  if (/(pendidikan|education|akademik|academic|sekolah|kuliah)/.test(value)) return PhGraduationCap;
+  if (/(travel|wisata|perjalanan|geografi|geography)/.test(value)) return PhGlobe;
+  if (/(seni|art|desain|design|arsitektur|architecture)/.test(value)) return PhPalette;
+  if (/(musik|music|lagu|song)/.test(value)) return PhMusicNotes;
+  if (/(misteri|mystery|detektif|detective|kriminal|crime|thriller)/.test(value)) return PhDetective;
+  if (/(sejarah|history|masa lalu)/.test(value)) return PhClock;
+  if (/(filsafat|philosophy|etika|ethics)/.test(value)) return PhScales;
+  if (/(berita|news|jurnalistik|journalism)/.test(value)) return PhNewspaper;
+  if (/(pengembangan diri|self[- ]help|motivasi|motivation|inspirasi|inspiration)/.test(value)) return PhSparkle;
+  if (/(novel|fiksi|fiction|cerita|story)/.test(value)) return PhBookOpen;
+  if (/(biografi|memoar|memoir)/.test(value)) return PhBookmarkSimple;
+  return PhTag;
+}
+const genreThemes = [
+  { bar: "bg-blue", icon: "bg-blue text-white" },
+  { bar: "bg-orange", icon: "bg-orange text-white" },
+  { bar: "bg-green", icon: "bg-green text-white" },
+  { bar: "bg-red", icon: "bg-red text-white" },
+  { bar: "bg-gray", icon: "bg-gray text-white" },
+];
+function getGenreTheme(index: number) {
+  return genreThemes[index % genreThemes.length];
 }
 function openPlatform() {
   setSource("platform");
@@ -247,16 +295,54 @@ onMounted(() => {
             </IOSListGroup>
 
             <!-- Collections -->
-            <IOSListGroup v-if="genres.length" title="Koleksi">
-              <IOSListRow
-                v-for="genre in genres"
-                :key="genre"
-                :icon="PhTag"
-                icon-class="text-gray"
-                :label="genre"
-                @click="openGenre(genre)"
-              />
-            </IOSListGroup>
+            <section v-if="genres.length" class="space-y-3">
+              <div class="flex items-end justify-between px-1">
+                <div>
+                  <h2 class="text-[20px] font-bold tracking-[-0.01em] text-label">Koleksi</h2>
+                  <p class="mt-0.5 text-[13px] text-label2">{{ genres.length }} genre untuk dijelajahi</p>
+                </div>
+                <button class="pb-0.5 text-[15px] font-semibold text-blue active:opacity-60" @click="openAllBooks">Lihat semua</button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
+                <button
+                  type="button"
+                  class="group flex min-h-[108px] flex-col justify-between rounded-[14px] border border-sep bg-card p-4 text-left transition-colors hover:bg-fill active:bg-fill"
+                  @click="openAllBooks"
+                >
+                  <span class="grid h-8 w-8 place-items-center rounded-[9px] bg-blue text-white">
+                    <PhBooks :size="20" weight="fill" />
+                  </span>
+                  <span class="mt-4 flex items-end justify-between gap-2">
+                    <span class="min-w-0">
+                      <span class="block truncate text-[16px] font-semibold text-label">Semua buku</span>
+                      <span class="mt-0.5 block text-[12px] text-label2">{{ stats?.total_books ?? 0 }} buku</span>
+                    </span>
+                    <PhCaretRight :size="15" weight="bold" class="shrink-0 text-label3" />
+                  </span>
+                </button>
+
+                <button
+                  v-for="(genre, index) in genres"
+                  :key="genre"
+                  type="button"
+                  class="group relative flex min-h-[108px] flex-col justify-between overflow-hidden rounded-[14px] border border-sep bg-card p-4 pl-5 text-left transition-colors hover:bg-fill active:bg-fill"
+                  :aria-label="`Buka genre ${genre}`"
+                  @click="openGenre(genre)"
+                >
+                  <span class="absolute inset-y-0 left-0 w-1" :class="getGenreTheme(index).bar" />
+                  <span class="grid h-8 w-8 place-items-center rounded-[9px]" :class="getGenreTheme(index).icon">
+                    <component :is="getGenreIcon(genre)" :size="19" weight="fill" />
+                  </span>
+                  <span class="mt-4 flex items-end justify-between gap-2">
+                    <span class="min-w-0">
+                      <span class="block truncate text-[16px] font-semibold text-label" :title="genre">{{ genre }}</span>
+                    </span>
+                    <PhCaretRight :size="15" weight="bold" class="shrink-0 text-label3" />
+                  </span>
+                </button>
+              </div>
+            </section>
           </div>
         </template>
 
