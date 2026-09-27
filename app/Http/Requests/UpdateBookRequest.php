@@ -30,7 +30,34 @@ class UpdateBookRequest extends FormRequest
             ],
             'pages_read' => ['nullable', 'integer', 'min:0'],
             'status' => ['nullable', 'string', 'in:to_read,currently_reading,finished,dropped'],
-            'pdf' => ['nullable', 'file', 'mimetypes:application/pdf', 'max:51200'],
+            'pdf' => ['nullable', 'file', 'max:51200', $this->bookFileRule()],
+            'file' => ['nullable', 'file', 'max:51200', $this->bookFileRule()],
         ];
+    }
+
+    private function bookFileRule(): \Closure
+    {
+        return function (string $attribute, mixed $value, \Closure $fail) {
+            if (!$value instanceof \Illuminate\Http\UploadedFile) {
+                return;
+            }
+
+            $extension = strtolower($value->getClientOriginalExtension());
+            $mime = strtolower((string) $value->getMimeType());
+
+            $allowed = [
+                'pdf' => ['application/pdf'],
+                'epub' => ['application/epub+zip', 'application/zip', 'application/octet-stream'],
+            ];
+
+            if (!isset($allowed[$extension])) {
+                $fail('File harus berformat PDF atau EPUB.');
+                return;
+            }
+
+            if ($mime !== '' && !in_array($mime, $allowed[$extension], true)) {
+                $fail('Isi file tidak cocok dengan ekstensi .' . $extension . '.');
+            }
+        };
     }
 }

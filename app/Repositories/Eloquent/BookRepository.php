@@ -5,12 +5,25 @@ namespace App\Repositories\Eloquent;
 use App\Models\Book;
 use App\Models\ReadingProgress;
 use App\Repositories\Interfaces\BookRepositoryInterface;
+use App\Services\CoverImageService;
+use App\Services\EpubService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class BookRepository implements BookRepositoryInterface
 {
+    private EpubService $epubService;
+
+    private CoverImageService $coverService;
+
+    public function __construct(?EpubService $epubService = null, ?CoverImageService $coverService = null)
+    {
+        $this->epubService = $epubService ?? new EpubService();
+        $this->coverService = $coverService ?? new CoverImageService();
+    }
+
     private function visibleQuery()
     {
         $uid = Auth::id();
@@ -55,14 +68,14 @@ class BookRepository implements BookRepositoryInterface
     {
         switch ($sort) {
             case 'oldest':
-                return $query->orderBy('created_at');
+                return $query->orderBy('created_at')->orderBy('id');
             case 'title':
                 return $query->orderBy('name');
             case 'author':
                 return $query->orderBy('author');
             case 'newest':
             default:
-                return $query->orderByDesc('created_at');
+                return $query->orderByDesc('created_at')->orderByDesc('id');
         }
     }
 
@@ -157,22 +170,17 @@ class BookRepository implements BookRepositoryInterface
             $data['cover'] = request()->file('cover')->store('BookCovers', 'public');
         }
 
-        if (request()->hasFile('pdf')) {
-            $pdf = request()->file('pdf');
-            $content = file_get_contents($pdf->getRealPath());
-            if (strpos($content, '%PDF') !== 0 && strpos($content, '%PDF') === false) {
-                abort(422, 'File is not a valid PDF.');
+        $file = $this->uploadedFile();
+        if ($file) {
+            $stored = $this->storeUploadedFile($file, empty($data['cover']));
+            $data = array_merge($data, $stored['fields']);
+            if (empty($data['cover']) && $stored['cover']) {
+                $data['cover'] = $stored['cover'];
             }
-            $path = $pdf->store('user_uploads/' . Auth::id(), 'private');
-            $data['pdf_path'] = $path;
-            $data['pdf_original_name'] = $pdf->getClientOriginalName();
-            $data['pdf_mime'] = 'application/pdf';
-            $data['pdf_size_bytes'] = $pdf->getSize();
-            $data['pdf_total_pages'] = $this->countPdfPages($pdf->getRealPath());
-            $data['pages'] = $data['pdf_total_pages'];
-            if (empty($data['cover'])) {
-                $thumb = $this->generateThumbnail($path, $data['pdf_total_pages']);
-                if ($thumb) $data['cover'] = $thumb;
+            foreach (['name' => 'title', 'author' => 'author', 'publisher' => 'publisher', 'description' => 'description'] as $field => $metaKey) {
+                if (empty($data[$field]) && !empty($stored['metadata'][$metaKey])) {
+                    $data[$field] = $stored['metadata'][$metaKey];
+                }
             }
         }
 
@@ -198,23 +206,13 @@ class BookRepository implements BookRepositoryInterface
             $data['cover'] = request()->file('cover')->store('BookCovers', 'public');
         }
 
-        if (request()->hasFile('pdf')) {
-            $pdf = request()->file('pdf');
-            $content = file_get_contents($pdf->getRealPath());
-            if (strpos($content, '%PDF') === false) {
-                abort(422, 'File is not a valid PDF.');
-            }
+        $file = $this->uploadedFile();
+        if ($file) {
+            $stored = $this->storeUploadedFile($file, empty($data['cover']) && empty($book->cover));
             if ($book->pdf_path) Storage::disk('private')->delete($book->pdf_path);
-            $path = $pdf->store('user_uploads/' . Auth::id(), 'private');
-            $data['pdf_path'] = $path;
-            $data['pdf_original_name'] = $pdf->getClientOriginalName();
-            $data['pdf_mime'] = 'application/pdf';
-            $data['pdf_size_bytes'] = $pdf->getSize();
-            $data['pdf_total_pages'] = $this->countPdfPages($pdf->getRealPath());
-            $data['pages'] = $data['pdf_total_pages'];
-            if (empty($data['cover']) && empty($book->cover)) {
-                $thumb = $this->generateThumbnail($path, $data['pdf_total_pages']);
-                if ($thumb) $data['cover'] = $thumb;
+            $data = array_merge($data, $stored['fields']);
+            if (empty($data['cover']) && empty($book->cover) && $stored['cover']) {
+                $data['cover'] = $stored['cover'];
             }
         }
 
@@ -324,6 +322,102 @@ class BookRepository implements BookRepositoryInterface
             $book->setRelation('readingProgress', $rp);
             return $book;
         })->filter()->values();
+    }
+
+    private function uploadedFile(): ?UploadedFile
+    {
+        return request()->file('file') ?? request()->file('pdf');
+    }
+
+    /**
+     * @return array{fields: array<string, mixed>, cover: ?string, metadata: array<string, mixed>}
+     */
+    private function storeUploadedFile(UploadedFile $file, bool $generateCover = true): array
+    {
+        $realPath = (string) $file->getRealPath();
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        if ($extension === 'epub' || $this->epubService->isEpub($realPath)) {
+            return $this->storeEpubFile($file, $generateCover);
+        }
+
+        if ($extension === 'pdf' || str_starts_with((string) file_get_contents($realPath, false, null, 0, 5), '%PDF')) {
+            return $this->storePdfFile($file, $generateCover);
+        }
+
+        abort(422, 'File must be a PDF or EPUB.');
+    }
+
+    /**
+     * @return array{fields: array<string, mixed>, cover: ?string, metadata: array<string, mixed>}
+     */
+    private function storePdfFile(UploadedFile $file, bool $generateCover = true): array
+    {
+        $content = (string) file_get_contents($file->getRealPath(), false, null, 0, 1024);
+        if (!str_contains($content, '%PDF')) {
+            abort(422, 'File is not a valid PDF.');
+        }
+
+        $path = $file->store('user_uploads/' . Auth::id(), 'private');
+        $totalPages = $this->countPdfPages($file->getRealPath());
+        $cover = $generateCover && $totalPages ? $this->generateThumbnail($path, $totalPages) : null;
+
+        return [
+            'fields' => [
+                'pdf_path' => $path,
+                'pdf_original_name' => $file->getClientOriginalName(),
+                'pdf_mime' => 'application/pdf',
+                'pdf_size_bytes' => $file->getSize(),
+                'pdf_total_pages' => $totalPages,
+                'file_type' => 'pdf',
+                'pages' => $totalPages,
+            ],
+            'cover' => $cover,
+            'metadata' => [],
+        ];
+    }
+
+    /**
+     * @return array{fields: array<string, mixed>, cover: ?string, metadata: array<string, mixed>}
+     */
+    private function storeEpubFile(UploadedFile $file, bool $generateCover = true): array
+    {
+        if (!class_exists(\ZipArchive::class)) {
+            abort(500, 'EPUB support requires the PHP zip extension.');
+        }
+
+        $metadata = $this->epubService->parse((string) $file->getRealPath());
+        if ($metadata === null) {
+            abort(422, 'File is not a valid EPUB.');
+        }
+
+        $path = $file->store('user_uploads/' . Auth::id(), 'private');
+
+        $cover = null;
+        if ($generateCover && !empty($metadata['cover'])) {
+            $normalized = $this->coverService->normalize(
+                $metadata['cover']['contents'],
+                $metadata['cover']['mime'],
+                $metadata['cover']['ext']
+            );
+            $filename = 'BookCovers/epub_' . md5($path) . '.' . $normalized['ext'];
+            Storage::disk('public')->put($filename, $normalized['contents']);
+            $cover = $filename;
+        }
+
+        return [
+            'fields' => [
+                'pdf_path' => $path,
+                'pdf_original_name' => $file->getClientOriginalName(),
+                'pdf_mime' => EpubService::MIME,
+                'pdf_size_bytes' => $file->getSize(),
+                'pdf_total_pages' => $metadata['pages'],
+                'file_type' => 'epub',
+                'pages' => $metadata['pages'],
+            ],
+            'cover' => $cover,
+            'metadata' => $metadata,
+        ];
     }
 
     private function countPdfPages(string $path): ?int

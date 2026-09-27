@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Book;
+use App\Services\EpubService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,14 +18,15 @@ class BookFileController extends Controller
             abort(403, 'Forbidden');
         }
         if (empty($book->pdf_path)) {
-            return response()->json(['message' => 'PDF not available for this book.'], 404);
+            return response()->json(['message' => 'File not available for this book.'], 404);
         }
         if (!Storage::disk('private')->exists($book->pdf_path)) {
             return response()->json(['message' => 'File not found on storage.'], 404);
         }
+        $mime = $book->pdf_mime ?: ($book->file_type === 'epub' ? EpubService::MIME : 'application/pdf');
         $path = Storage::disk('private')->path($book->pdf_path);
         return response()->file($path, [
-            'Content-Type' => 'application/pdf',
+            'Content-Type' => $mime,
             'Content-Disposition' => 'inline; filename="' . addslashes($book->pdf_original_name ?: basename($book->pdf_path)) . '"',
             'Accept-Ranges' => 'bytes',
             'Cache-Control' => 'private, max-age=3600',

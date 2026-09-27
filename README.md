@@ -37,7 +37,8 @@ REST API backend for **TrackRead** — a personal book management and reading pr
 | `GET` | `/books` | Paginated list of books (supports `?genre=&page=&per_page=`) | ✅ Yes |
 | `GET` | `/books/genres` | Unique list of user genres | ✅ Yes |
 | `GET` | `/books/search` | Search books (`?q=&genre=&page=`) | ✅ Yes |
-| `POST` | `/books` | Create new book (multipart/form-data with optional cover) | ✅ Yes |
+| `GET` | `/books/{id}/file` | Stream the uploaded file (PDF/EPUB) | ✅ Yes |
+| `POST` | `/books` | Create new book (multipart/form-data with optional `cover` + `pdf`/epub file) | ✅ Yes |
 | `PUT` | `/books/{id}` | Update existing book details or progress | ✅ Yes |
 | `DELETE` | `/books/{id}` | Delete book from library | ✅ Yes |
 
@@ -70,18 +71,25 @@ REST API backend for **TrackRead** — a personal book management and reading pr
    docker compose exec php php artisan key:generate
    docker compose exec php php artisan migrate
    docker compose exec php php artisan storage:link
+   docker compose exec php php artisan db:seed
    ```
+   *`InitialBookSeeder` replaces the library with every EPUB in `storage/app/public/initial_books/`
+   (metadata, curated genre, cover, and estimated page count are extracted automatically).*
 
 4. **Access the API:**
    - Base URL: `http://localhost:8001/api/v1`
    - Interactive API Docs: `http://localhost:8001/docs/api`
+
+> **Note:** OPcache runs with `validate_timestamps=0`, so PHP code changes are not
+> picked up automatically. After deploying, restart the container:
+> `docker compose restart php` (or run `opcache_reset()`).
 
 ---
 
 ## 💻 Running Locally (Without Docker)
 
 ### Prerequisites
-- PHP 8.2+ with `pdo_pgsql`, `mbstring`, `gd` extensions
+- PHP 8.2+ with `pdo_pgsql`, `mbstring`, `gd`, `zip` extensions (`zip` is required to parse EPUB metadata/covers)
 - Composer 2.x
 - PostgreSQL server running locally
 

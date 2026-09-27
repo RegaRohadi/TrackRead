@@ -37,25 +37,32 @@ class ReadingProgressController extends Controller
         if ($book->source === Book::SOURCE_UPLOAD && (int) $book->user_id !== (int) $uid) {
             abort(403);
         }
-        $tp = $book->pdf_total_pages ?: $book->pages;
-        $max = $tp ?: 10000;
+        $bookTotal = $book->pdf_total_pages ?: $book->pages;
+
+        // Readers may report their own page count (e.g. EPUB locations),
+        // which can differ from the stored estimate.
         $validated = $request->validate([
-            'current_page' => ['required', 'integer', 'min:1', 'max:' . $max],
+            'current_page' => ['required', 'integer', 'min:1', 'max:100000'],
+            'total_pages' => ['nullable', 'integer', 'min:1', 'max:100000'],
         ]);
         $current = (int) $validated['current_page'];
-        if ($tp && $current > $tp) {
+        $total = isset($validated['total_pages']) ? (int) $validated['total_pages'] : $bookTotal;
+        $limit = max((int) ($bookTotal ?: 0), (int) ($total ?: 0), 10000);
+
+        if ($current > $limit || ($total && $current > $total)) {
             return response()->json(['message' => 'Halaman melebihi total halaman.'], 422);
         }
+
         $progress = ReadingProgress::updateOrCreate(
             ['user_id' => $uid, 'book_id' => $id],
-            ['current_page' => $current, 'total_pages' => $tp, 'last_read_at' => now()]
+            ['current_page' => $current, 'total_pages' => $total, 'last_read_at' => now()]
         );
         return response()->json([
             'data' => [
                 'book_id' => $id,
                 'current_page' => $progress->current_page,
                 'total_pages' => $progress->total_pages,
-                'progress_percent' => $tp ? round(min(100, ($current / $tp) * 100), 1) : 0,
+                'progress_percent' => $total ? round(min(100, ($current / $total) * 100), 1) : 0,
                 'last_read_at' => $progress->last_read_at,
             ],
             'message' => 'Progress saved',

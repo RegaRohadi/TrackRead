@@ -36,6 +36,7 @@ class Book extends Model
         'pages_read',
         'status',
         'source',
+        'file_type',
         'pdf_path',
         'pdf_original_name',
         'pdf_mime',
