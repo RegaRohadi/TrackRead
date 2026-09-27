@@ -8,6 +8,7 @@ Modern Single Page Application (SPA) for **TrackRead** — a personal book manag
 
 - 🔐 **Authentication Flows**: Unified Login & Register view with form validation and Pinia session management.
 - 📚 **Interactive Book Management**: Add, edit, delete, and view reading materials in a responsive card grid.
+- 📖 **Built-in Reader**: Read uploaded **PDF** (pdf.js) and **EPUB** (epub.js) files with auto-saved progress.
 - 📊 **Visual Progress Bars**: Dynamic reading progress calculation (`pages_read / total_pages`).
 - 🔎 **Real-time Filter & Search**: Instant debounce search by title/author/ISBN and genre filtering.
 - 🎨 **Modern Design**: Responsive UI with TailwindCSS v4, modals, and SweetAlert2 interactive alerts.

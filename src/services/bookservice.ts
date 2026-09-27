@@ -33,7 +33,7 @@ class BookService {
     return response.data.data as Book;
   }
 
-  async uploadPdf(data: FormData, onProgress?: (pct: number) => void) {
+  async uploadFile(data: FormData, onProgress?: (pct: number) => void) {
     const response = await api.post("/books/upload", data, {
       headers: { "Content-Type": "multipart/form-data" },
       onUploadProgress: (e) => {
@@ -83,8 +83,29 @@ class BookService {
     return res.data.data;
   }
 
-  async saveProgress(id: number, currentPage: number) {
-    const res = await api.put(`/books/${id}/progress`, { current_page: currentPage });
+  async saveProgress(id: number, currentPage: number, options: { keepalive?: boolean; totalPages?: number | null } = {}) {
+    const payload: Record<string, number> = { current_page: currentPage };
+    if (options.totalPages && options.totalPages > 0) payload.total_pages = options.totalPages;
+
+    if (options.keepalive) {
+      const base = (api.defaults.baseURL as string) || "";
+      const url = `${base.replace(/\/$/, "")}/books/${id}/progress`;
+      const token = typeof window !== "undefined" ? window.localStorage.getItem("token") : null;
+      const res = await fetch(url, {
+        method: "PUT",
+        keepalive: true,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error(`Failed to save progress (${res.status}).`);
+      return (await res.json()).data;
+    }
+
+    const res = await api.put(`/books/${id}/progress`, payload);
     return res.data.data;
   }
 }

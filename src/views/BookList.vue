@@ -50,7 +50,7 @@ import BaseButton from "@/components/BaseButton.vue";
 import BaseModal from "@/components/BaseModal.vue";
 import BookForm from "@/components/BookForm.vue";
 import BookLookupModal from "@/components/BookLookupModal.vue";
-import UploadPdfModal from "@/components/UploadPdfModal.vue";
+import UploadBookModal from "@/components/UploadBookModal.vue";
 import type { Book, ExternalBookResult } from "@/types/book";
 
 const { theme, preference, setTheme, toggleTheme } = useTheme();
@@ -59,7 +59,7 @@ const authStore = useAuthStore();
 
 const {
   books, genres, selectedGenre, selectedStatus, selectedSource, sort, stats, yearlyGoal, page, lastPage, total, form,
-  loading, isSubmitting, showForm, isEdit, getBooks, loadMore, getGenres, getStats, getContinueReading, setGenre, setStatus, setSource, setSort, setSearch, clearSearch, setYearlyGoal, submitForm, deleteBook, autofillFromExternal, uploadPdf, openCreateForm, openEditForm, closeForm, setCover, coverPreviewUrl, coverFile, isFetchingCover, isUploading, uploadProgress, continueBooks, continueLoading,
+  loading, isSubmitting, showForm, isEdit, getBooks, loadMore, getGenres, getStats, getContinueReading, setGenre, setStatus, setSource, setSort, setSearch, clearSearch, setYearlyGoal, submitForm, deleteBook, autofillFromExternal, uploadBook, openCreateForm, openEditForm, closeForm, setCover, coverPreviewUrl, coverFile, isFetchingCover, isUploading, uploadProgress, continueBooks, continueLoading,
 } = useBooks();
 
 const activeTab = ref<"buku" | "katalog" | "profil">("buku");
@@ -153,7 +153,7 @@ const genreThemes = [
   { bar: "bg-gray", icon: "bg-gray text-white" },
 ];
 function getGenreTheme(index: number) {
-  return genreThemes[index % genreThemes.length];
+  return genreThemes[index % genreThemes.length] ?? { bar: "bg-blue", icon: "bg-blue text-white" };
 }
 function openPlatform() {
   setSource("platform");
@@ -188,7 +188,7 @@ async function handleLookupSelect(externalBook: ExternalBookResult) {
   await autofillFromExternal(externalBook);
 }
 async function handleUpload(payload: { file: File; meta: { name: string; author: string; genre: string } }) {
-  const created = await uploadPdf(payload.file, payload.meta);
+  const created = await uploadBook(payload.file, payload.meta);
   if (created) showUploadModal.value = false;
 }
 function editFromDetail(book: Book) {
@@ -201,6 +201,11 @@ async function deleteFromDetail(book: Book) {
 }
 function readSelected() {
   if (selectedBook.value) openReader(selectedBook.value);
+}
+function readLabel(book: Book | null) {
+  if (!book) return "Baca";
+  if ((book.current_page ?? 0) > 0) return "Lanjutkan Baca";
+  return book.file_type === "epub" ? "Baca EPUB" : "Baca PDF";
 }
 function editSelected() {
   if (selectedBook.value) editFromDetail(selectedBook.value);
@@ -235,7 +240,7 @@ onMounted(() => {
             <PhMoon v-if="theme === 'dark'" :size="19" weight="fill" />
             <PhSun v-else :size="19" weight="fill" />
           </button>
-          <button class="grid h-9 w-9 place-items-center rounded-full text-blue active:opacity-60" aria-label="Unggah PDF" @click="showUploadModal = true">
+          <button class="grid h-9 w-9 place-items-center rounded-full text-blue active:opacity-60" aria-label="Unggah PDF/EPUB" @click="showUploadModal = true">
             <PhUploadSimple :size="19" weight="bold" />
           </button>
         </template>
@@ -258,8 +263,8 @@ onMounted(() => {
                 <button class="text-[15px] font-semibold text-blue active:opacity-60" @click="openPlatform">Lihat semua</button>
               </div>
               <div class="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] lg:-mx-8 lg:px-8 [&::-webkit-scrollbar]:hidden">
-                <button v-for="book in discoverBooks" :key="book.id" class="w-[92px] shrink-0 text-left" @click="openDetail(book)">
-                  <div class="aspect-[2/3] w-full overflow-hidden rounded-[8px] bg-gray6 shadow-[0_1px_3px_rgba(0,0,0,0.14)]">
+                <button v-for="book in discoverBooks" :key="book.id" class="group w-[92px] shrink-0 text-left" @click="openDetail(book)">
+                  <div class="aspect-[2/3] w-full origin-left overflow-hidden rounded-[8px] bg-gray6 shadow-[0_1px_3px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-out will-change-transform group-hover:[transform:perspective(900px)_translateY(-4px)_rotateY(-16deg)_rotateX(3deg)] group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]">
                     <CoverImage :cover="book.cover" :cover-url="book.cover_url" :title="book.name" :author="book.author" />
                   </div>
                   <p class="mt-1.5 line-clamp-2 text-[12px] leading-tight font-medium text-label">{{ book.name }}</p>
@@ -475,7 +480,7 @@ onMounted(() => {
     <!-- Detail sheet -->
     <BaseModal :show="!!selectedBook" @close="selectedBook = null">
       <div v-if="selectedBook" class="flex gap-4">
-        <div class="h-[150px] w-[100px] shrink-0 overflow-hidden rounded-[8px]">
+        <div class="h-[150px] w-[100px] shrink-0 origin-left overflow-hidden rounded-[8px] transition-transform duration-300 ease-out will-change-transform hover:[transform:perspective(900px)_rotateY(-16deg)_rotateX(3deg)] hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]">
           <CoverImage :cover="selectedBook.cover" :cover-url="selectedBook.cover_url" :title="selectedBook.name" :author="selectedBook.author" />
         </div>
         <div class="min-w-0 flex-1">
@@ -500,12 +505,12 @@ onMounted(() => {
       <div class="mt-4 rounded-[12px] bg-bg2 dark:bg-gray6">
         <div class="flex justify-between border-b border-sep px-4 py-2.5 text-[15px]"><span class="text-label2">Penerbit</span><span class="truncate pl-3 text-right text-label">{{ selectedBook?.publisher || "-" }}</span></div>
         <div class="flex justify-between border-b border-sep px-4 py-2.5 text-[15px]"><span class="text-label2">Rilis</span><span class="text-label">{{ formatDate(selectedBook?.release_date) }}</span></div>
-        <div class="flex justify-between px-4 py-2.5 text-[15px]"><span class="text-label2">Berkas</span><span class="truncate pl-3 text-right text-label">{{ selectedBook?.pdf_original_name || "Manual" }}</span></div>
+        <div class="flex justify-between px-4 py-2.5 text-[15px]"><span class="text-label2">Berkas</span><span class="truncate pl-3 text-right text-label">{{ selectedBook?.file_original_name || selectedBook?.pdf_original_name || "Manual" }}</span></div>
       </div>
 
       <div class="mt-5 flex flex-col gap-2">
-        <BaseButton v-if="selectedBook?.has_pdf" class="w-full" @click="readSelected">
-          <PhBookOpen :size="16" weight="bold" /> {{ (selectedBook?.current_page ?? 0) > 0 ? "Lanjutkan Baca" : "Baca PDF" }}
+        <BaseButton v-if="selectedBook?.has_file || selectedBook?.has_pdf" class="w-full" @click="readSelected">
+          <PhBookOpen :size="16" weight="bold" /> {{ readLabel(selectedBook) }}
         </BaseButton>
         <BaseButton v-if="selectedBook?.source !== 'platform'" variant="secondary" class="w-full" @click="editSelected">
           <PhPencilSimple :size="16" weight="bold" /> Edit Buku
@@ -521,6 +526,6 @@ onMounted(() => {
       <BookForm :form="form" :is-edit="isEdit" :is-submitting="isSubmitting" :coverPreviewUrl="coverPreviewUrl" :coverFile="coverFile" :isFetchingCover="isFetchingCover" @submit="submitForm" @cancel="closeForm" @open-lookup="showLookupModal = true" @cover-change="setCover" />
     </BaseModal>
     <BookLookupModal :show="showLookupModal" @close="showLookupModal = false" @select="handleLookupSelect" />
-    <UploadPdfModal :show="showUploadModal" :uploading="isUploading" :progress="uploadProgress" @close="showUploadModal = false" @upload="handleUpload" />
+    <UploadBookModal :show="showUploadModal" :uploading="isUploading" :progress="uploadProgress" @close="showUploadModal = false" @upload="handleUpload" />
   </div>
 </template>

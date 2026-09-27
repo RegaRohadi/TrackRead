@@ -41,13 +41,13 @@ watch(() => props.form.pages_read, (newVal) => { if (newVal && props.form.pages 
       </div>
       <div class="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
         <BaseInput label="Halaman Selesai Dibaca" type="number" :modelValue="String(form.pages_read ?? '')" placeholder="Contoh: 120" @update:modelValue="(value) => (form.pages_read = parseNumberValue(value))" />
-        <div class="mb-4 flex items-end px-1 pb-1 text-[13px] text-label2">Progress PDF tersimpan otomatis di Reader.</div>
+        <div class="mb-4 flex items-end px-1 pb-1 text-[13px] text-label2">Progress PDF/EPUB tersimpan otomatis di Reader.</div>
       </div>
       <BaseInput label="Deskripsi / Sinopsis" v-model="form.description" placeholder="Deskripsi ringkas buku" />
       <div class="mb-4">
         <div v-if="isFetchingCover" class="mb-2 flex items-center gap-2 px-1 text-[13px] text-blue"><span class="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue border-t-transparent"></span> Mengunduh cover...</div>
         <BaseImageInput :existingUrl="coverPreviewUrl" :modelValue="coverFile" @update:modelValue="onCoverChange" />
-        <p v-if="form.has_pdf" class="mt-2 px-1 text-[13px] text-label2">Buku ini memiliki PDF ({{ form.pdf_total_pages ?? form.pages }} hal).</p>
+        <p v-if="form.has_file || form.has_pdf" class="mt-2 px-1 text-[13px] text-label2">Buku ini memiliki {{ form.file_type === "epub" ? "EPUB" : "PDF" }} ({{ form.pdf_total_pages ?? form.pages }} hal).</p>
       </div>
       <div class="flex justify-end gap-2 pt-1">
         <BaseButton variant="secondary" @click="emit('cancel')">Batal</BaseButton>

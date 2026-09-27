@@ -2,6 +2,8 @@ export type ReadingStatus = 'to_read' | 'currently_reading' | 'finished' | 'drop
 
 export type BookSource = 'platform' | 'upload';
 
+export type BookFileType = 'pdf' | 'epub';
+
 export interface ReadingProgress {
   current_page: number;
   total_pages: number | null;
@@ -23,6 +25,9 @@ export interface Book {
   pages_read: number | null;
   status?: ReadingStatus;
   source: BookSource;
+  file_type: BookFileType | null;
+  file_original_name?: string | null;
+  has_file: boolean;
   pdf_path: string | null;
   pdf_original_name: string | null;
   pdf_size_bytes: number | null;

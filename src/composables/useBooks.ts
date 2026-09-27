@@ -5,6 +5,13 @@ import type { Book, ReadingStats, ExternalBookResult, BookSource } from "@/types
 import BookService from "@/services/bookservice";
 import openLibraryService from "@/services/openLibraryService";
 
+export function bookFileType(file: File): "pdf" | "epub" | null {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".pdf")) return "pdf";
+  if (name.endsWith(".epub")) return "epub";
+  return null;
+}
+
 export function useBooks() {
   const books = ref<Book[]>([]);
   const genres = ref<string[]>([]);
@@ -45,6 +52,9 @@ export function useBooks() {
     pages_read: null,
     status: "to_read",
     source: "upload",
+    file_type: null,
+    file_original_name: null,
+    has_file: false,
     pdf_path: null,
     pdf_original_name: null,
     pdf_size_bytes: null,
@@ -77,6 +87,9 @@ export function useBooks() {
       pages_read: null,
       status: "to_read",
       source: "upload",
+      file_type: null,
+      file_original_name: null,
+      has_file: false,
       pdf_path: null,
       pdf_original_name: null,
       pdf_size_bytes: null,
@@ -330,33 +343,34 @@ export function useBooks() {
     }
   };
 
-  const uploadPdf = async (file: File, meta: { name?: string; author?: string; genre?: string; description?: string }) => {
-    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      showError("File harus berformat PDF.");
+  const uploadBook = async (file: File, meta: { name?: string; author?: string; genre?: string; description?: string }) => {
+    const fileType = bookFileType(file);
+    if (!fileType) {
+      showError("File harus berformat PDF atau EPUB.");
       return null;
     }
     if (file.size > 50 * 1024 * 1024) {
-      showError("Ukuran PDF melebihi 50MB.");
+      showError("Ukuran file melebihi 50MB.");
       return null;
     }
     isUploading.value = true;
     uploadProgress.value = 0;
     try {
       const fd = new FormData();
-      fd.append("pdf", file);
-      fd.append("name", meta.name || file.name.replace(/\.pdf$/i, ""));
+      fd.append("file", file);
+      fd.append("name", meta.name || file.name.replace(/\.(pdf|epub)$/i, ""));
       if (meta.author) fd.append("author", meta.author);
       if (meta.genre) fd.append("genre", meta.genre);
       if (meta.description) fd.append("description", meta.description);
-      const created = await BookService.uploadPdf(fd, (pct) => (uploadProgress.value = pct));
+      const created = await BookService.uploadFile(fd, (pct) => (uploadProgress.value = pct));
       books.value = [created, ...books.value];
       applyStatsAdd(created);
-      showSuccess("PDF berhasil diupload.");
+      showSuccess(`${fileType === "epub" ? "EPUB" : "PDF"} berhasil diupload.`);
       backgroundRefresh();
       return created;
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
-      showError(err?.response?.data?.message ?? "Gagal upload PDF.");
+      showError(err?.response?.data?.message ?? "Gagal upload file.");
       return null;
     } finally {
       isUploading.value = false;
@@ -502,7 +516,7 @@ export function useBooks() {
     submitForm,
     deleteBook,
     autofillFromExternal,
-    uploadPdf,
+    uploadBook,
     openCreateForm,
     openEditForm,
     closeForm,

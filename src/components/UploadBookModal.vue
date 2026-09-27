@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
-import { PhFilePdf, PhUploadSimple, PhWarning } from "@phosphor-icons/vue";
+import { computed, ref } from "vue";
+import { PhFilePdf, PhFileZip, PhUploadSimple, PhWarning } from "@phosphor-icons/vue";
 import BaseModal from "./BaseModal.vue";
 import BaseButton from "./BaseButton.vue";
 import BaseInput from "./BaseInput.vue";
+import { bookFileType } from "@/composables/useBooks";
 
 const props = defineProps<{ show: boolean; uploading: boolean; progress: number }>();
 const emit = defineEmits<{ (e: "close"): void; (e: "upload", payload: { file: File; meta: { name: string; author: string; genre: string } }): void }>();
@@ -16,8 +17,10 @@ const metaAuthor = ref("");
 const metaGenre = ref("");
 const fileInput = ref<HTMLInputElement | null>(null);
 
+const fileType = computed(() => (file.value ? bookFileType(file.value) : null));
+
 function validate(f: File): string {
-  if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) return "File harus berformat PDF.";
+  if (!bookFileType(f)) return "File harus berformat PDF atau EPUB.";
   if (f.size > 50 * 1024 * 1024) return "Ukuran file melebihi 50MB.";
   if (f.size === 0) return "File kosong.";
   return "";
@@ -29,7 +32,7 @@ function pickFile(f: File | null) {
   const msg = validate(f);
   if (msg) { error.value = msg; return; }
   file.value = f;
-  if (!metaName.value) metaName.value = f.name.replace(/\.pdf$/i, "");
+  if (!metaName.value) metaName.value = f.name.replace(/\.(pdf|epub)$/i, "");
 }
 
 function onDrop(e: DragEvent) {
@@ -42,7 +45,7 @@ function onInputChange(e: Event) {
 }
 
 function doUpload() {
-  if (!file.value) { error.value = "Pilih file PDF terlebih dahulu."; return; }
+  if (!file.value) { error.value = "Pilih file PDF atau EPUB terlebih dahulu."; return; }
   const msg = validate(file.value);
   if (msg) { error.value = msg; return; }
   emit("upload", { file: file.value, meta: { name: metaName.value.trim(), author: metaAuthor.value.trim(), genre: metaGenre.value.trim() } });
@@ -56,7 +59,7 @@ function close() {
 </script>
 
 <template>
-  <BaseModal :show="show" title="Unggah PDF" @close="close">
+  <BaseModal :show="show" title="Unggah Buku" @close="close">
     <div
       @dragover.prevent="dragOver = true"
       @dragleave="dragOver = false"
@@ -66,16 +69,17 @@ function close() {
       :class="dragOver ? 'border-blue bg-blue/5' : 'border-gray3 active:bg-fill'"
     >
       <PhFilePdf :size="34" class="text-blue" weight="regular" />
-      <p class="mt-2 text-[15px] font-medium text-label">Pilih PDF atau seret ke sini</p>
-      <p class="text-[13px] text-label2">PDF · maks 50MB · privat</p>
-      <input ref="fileInput" type="file" accept="application/pdf,.pdf" class="hidden" @change="onInputChange" />
+      <p class="mt-2 text-[15px] font-medium text-label">Pilih PDF/EPUB atau seret ke sini</p>
+      <p class="text-[13px] text-label2">PDF · EPUB · maks 50MB · privat</p>
+      <input ref="fileInput" type="file" accept=".pdf,.epub,application/pdf,application/epub+zip" class="hidden" @change="onInputChange" />
     </div>
 
     <div v-if="file" class="mt-3 flex items-center gap-3 rounded-[10px] bg-fill px-3 py-2.5">
-      <PhFilePdf :size="20" weight="fill" class="shrink-0 text-blue" />
+      <PhFileZip v-if="fileType === 'epub'" :size="20" weight="fill" class="shrink-0 text-blue" />
+      <PhFilePdf v-else :size="20" weight="fill" class="shrink-0 text-blue" />
       <div class="min-w-0 flex-1">
         <p class="truncate text-[15px] font-medium text-label">{{ file.name }}</p>
-        <p class="text-[13px] text-label2">{{ (file.size / 1024 / 1024).toFixed(2) }} MB</p>
+        <p class="text-[13px] text-label2">{{ (file.size / 1024 / 1024).toFixed(2) }} MB · {{ fileType?.toUpperCase() }}</p>
       </div>
       <button class="shrink-0 text-label3 active:opacity-60" @click.stop="file = null" :disabled="uploading" aria-label="Hapus file">
         <PhWarning v-if="uploading" :size="16" />
