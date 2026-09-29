@@ -1,4 +1,5 @@
 name: trackread
+
 services:
   postgres:
     image: postgres:17
@@ -9,9 +10,14 @@ services:
       POSTGRES_USER: ${DB_USERNAME:-trackread}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-trackread123}
     ports:
-      - "${FORWARD_DB_PORT:-5432}:5432"
+      - "${FORWARD_DB_PORT:-5434}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-trackread} -d ${DB_DATABASE:-trackread}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - trackread-network
 
@@ -23,12 +29,22 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - .:/var/www
+      - ./backend:/var/www
+      - ./.env:/var/.env
       - ./docker/php/opcache.ini:/usr/local/etc/php/conf.d/opcache.ini
+    environment:
+      DB_CONNECTION: ${DB_CONNECTION:-pgsql}
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${DB_DATABASE:-trackread}
+      DB_USERNAME: ${DB_USERNAME:-trackread}
+      DB_PASSWORD: ${DB_PASSWORD:-trackread123}
+      APP_URL: ${APP_URL:-http://localhost:8001}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - trackread-network
-    depends_on:
-      - postgres
 
   nginx:
     image: nginx:latest
@@ -37,12 +53,25 @@ services:
     ports:
       - "${FORWARD_HTTP_PORT:-8001}:80"
     volumes:
-      - .:/var/www
+      - ./backend:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
-    networks:
-      - trackread-network
     depends_on:
       - php
+    networks:
+      - trackread-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: trackread-frontend
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    depends_on:
+      - nginx
+    networks:
+      - trackread-network
 
 volumes:
   postgres_data:

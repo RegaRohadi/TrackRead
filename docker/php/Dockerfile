@@ -28,7 +28,12 @@ WORKDIR /var/www
 # OPcache config for lower request latency (volume mount overrides this)
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+# Auto-setup entrypoint (composer install, app key, migrations, storage link)
+COPY docker/php/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 # Expose PHP-FPM port
 EXPOSE 9000
 
+ENTRYPOINT ["entrypoint.sh"]
 CMD ["php-fpm"]
