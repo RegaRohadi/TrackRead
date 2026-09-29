@@ -1,0 +1,16 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trackread-frontend
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    networks:
+      - trackread
+
+networks:
+  trackread:
+    external: true
+    name: trackread_trackread-network
