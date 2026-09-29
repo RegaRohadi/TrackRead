@@ -44,16 +44,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (login: string, password: string) => {
     loading.value = true;
     error.value = null;
 
     try {
-      const response = await api.post<AuthResponse>('/auth/login', { email, password });
+      const response = await api.post<AuthResponse>('/auth/login', { login, password });
       setAuth(response.data.user, response.data.token);
       return response.data;
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.response?.data?.errors?.email?.[0] || 'Login gagal.';
+      const errors = err?.response?.data?.errors;
+      const message = errors?.login?.[0] || errors?.email?.[0] || err?.response?.data?.message || 'Login gagal.';
       error.value = message;
       throw err;
     } finally {
@@ -61,13 +62,20 @@ export const useAuthStore = defineStore('auth', () => {
     }
   };
 
-  const register = async (name: string, email: string, password: string, passwordConfirmation: string) => {
+  const register = async (
+    name: string,
+    username: string,
+    email: string,
+    password: string,
+    passwordConfirmation: string,
+  ) => {
     loading.value = true;
     error.value = null;
 
     try {
       const response = await api.post<AuthResponse>('/auth/register', {
         name,
+        username,
         email,
         password,
         password_confirmation: passwordConfirmation,
@@ -75,7 +83,9 @@ export const useAuthStore = defineStore('auth', () => {
       setAuth(response.data.user, response.data.token);
       return response.data;
     } catch (err: any) {
-      const message = err?.response?.data?.message || err?.response?.data?.errors?.email?.[0] || 'Registrasi gagal.';
+      const errors = err?.response?.data?.errors;
+      const message =
+        errors?.username?.[0] || errors?.email?.[0] || err?.response?.data?.message || 'Registrasi gagal.';
       error.value = message;
       throw err;
     } finally {

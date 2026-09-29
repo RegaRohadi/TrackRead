@@ -14,6 +14,7 @@ const showPassword = ref(false);
 const isLogin = reactive({ value: true });
 const form = reactive({
   name: '',
+  username: '',
   email: '',
   password: '',
   passwordConfirmation: '',
@@ -21,12 +22,14 @@ const form = reactive({
 
 const touched = reactive({
   name: false,
+  username: false,
   email: false,
   password: false,
   passwordConfirmation: false,
 });
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_-]+$/;
 
 const nameError = computed(() => {
   if (isLogin.value) return '';
@@ -34,7 +37,21 @@ const nameError = computed(() => {
   return '';
 });
 
+const usernameError = computed(() => {
+  if (isLogin.value) return '';
+  const value = form.username.trim();
+  if (!value) return 'Username wajib diisi.';
+  if (value.length < 3) return 'Username minimal 3 karakter.';
+  if (value.length > 30) return 'Username maksimal 30 karakter.';
+  if (!USERNAME_REGEX.test(value)) return 'Username hanya boleh huruf, angka, garis bawah, dan strip.';
+  return '';
+});
+
 const emailError = computed(() => {
+  if (isLogin.value) {
+    if (!form.email.trim()) return 'Username atau email wajib diisi.';
+    return '';
+  }
   if (!form.email) return 'Email wajib diisi.';
   if (!EMAIL_REGEX.test(form.email)) return 'Format email tidak valid.';
   return '';
@@ -59,6 +76,7 @@ const isFormValid = computed(() => {
   }
   return (
     !nameError.value &&
+    !usernameError.value &&
     !emailError.value &&
     !passwordError.value &&
     !passwordConfirmationError.value
@@ -70,6 +88,7 @@ const toggleLabel = computed(() => (isLogin.value ? 'Belum punya akun?' : 'Sudah
 
 function touchAll() {
   touched.name = true;
+  touched.username = true;
   touched.email = true;
   touched.password = true;
   touched.passwordConfirmation = true;
@@ -82,7 +101,13 @@ async function submit() {
     if (isLogin.value) {
       await authStore.login(form.email, form.password);
     } else {
-      await authStore.register(form.name, form.email, form.password, form.passwordConfirmation);
+      await authStore.register(
+        form.name,
+        form.username,
+        form.email,
+        form.password,
+        form.passwordConfirmation,
+      );
     }
     await router.push({ name: 'books' });
   } catch {
@@ -93,6 +118,7 @@ async function submit() {
 function toggleMode() {
   isLogin.value = !isLogin.value;
   touched.name = false;
+  touched.username = false;
   touched.email = false;
   touched.password = false;
   touched.passwordConfirmation = false;
@@ -133,16 +159,33 @@ function toggleMode() {
           <p v-if="touched.name && nameError" class="mt-1 px-1 text-[13px] text-red-text">{{ nameError }}</p>
         </div>
 
+        <div v-if="!isLogin.value">
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Username</label>
+          <input
+            v-model="form.username"
+            type="text"
+            autocomplete="username"
+            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+            :class="touched.username && usernameError ? 'ring-2 ring-red' : ''"
+            placeholder="cth. budisanjaya"
+            required
+            @blur="touched.username = true"
+          />
+          <p v-if="touched.username && usernameError" class="mt-1 px-1 text-[13px] text-red-text">{{ usernameError }}</p>
+        </div>
+
         <div>
-          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Email</label>
+          <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">
+            {{ isLogin.value ? 'Username atau Email' : 'Email' }}
+          </label>
           <input
             v-model="form.email"
-            type="email"
-            autocomplete="email"
-            inputmode="email"
+            :type="isLogin.value ? 'text' : 'email'"
+            :autocomplete="isLogin.value ? 'username' : 'email'"
+            :inputmode="isLogin.value ? 'text' : 'email'"
             class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
             :class="touched.email && emailError ? 'ring-2 ring-red' : ''"
-            placeholder="email@example.com"
+            :placeholder="isLogin.value ? 'username atau email@example.com' : 'email@example.com'"
             required
             @blur="touched.email = true"
           />
