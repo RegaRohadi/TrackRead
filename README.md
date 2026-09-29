@@ -43,12 +43,6 @@ Entrypoint `php` otomatis menjalankan saat start:
 3. `php artisan migrate --force`
 4. `php artisan storage:link`
 
-Opsional — isi perpustakaan awal:
-
-```bash
-docker compose exec php php artisan db:seed
-```
-
 ### Akses
 
 | Layanan | URL |
