@@ -50,6 +50,11 @@ class BookService
         return $this->bookRepository->update($id, $data);
     }
 
+    public function updateStatus(int $id, string $status)
+    {
+        return $this->bookRepository->updateStatus($id, $status);
+    }
+
     public function deleteBook(int $id)
     {
         return $this->bookRepository->delete($id);

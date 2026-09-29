@@ -31,6 +31,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/books', [BookController::class, 'store']);
         Route::post('/books/upload', [BookController::class, 'store']);
         Route::put('/books/{id}', [BookController::class, 'update'])->whereNumber('id');
+        Route::patch('/books/{id}/status', [BookController::class, 'updateStatus'])->whereNumber('id');
         Route::delete('/books/{id}', [BookController::class, 'delete'])->whereNumber('id');
     });
 });

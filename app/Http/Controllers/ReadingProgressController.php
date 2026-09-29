@@ -53,16 +53,31 @@ class ReadingProgressController extends Controller
             return response()->json(['message' => 'Halaman melebihi total halaman.'], 422);
         }
 
+        $percent = $total ? round(min(100, ($current / $total) * 100), 1) : 0;
+        $existing = ReadingProgress::where('user_id', $uid)->where('book_id', $id)->first();
+
+        // Keep the shelf status in sync with actual reading so the "Sedang
+        // Dibaca" shelf and the library counts agree. A finished book is not
+        // downgraded by revisiting earlier pages.
+        if ($percent >= 100) {
+            $status = Book::STATUS_FINISHED;
+        } elseif ($existing?->status === Book::STATUS_FINISHED) {
+            $status = Book::STATUS_FINISHED;
+        } else {
+            $status = Book::STATUS_CURRENTLY_READING;
+        }
+
         $progress = ReadingProgress::updateOrCreate(
             ['user_id' => $uid, 'book_id' => $id],
-            ['current_page' => $current, 'total_pages' => $total, 'last_read_at' => now()]
+            ['current_page' => $current, 'total_pages' => $total, 'status' => $status, 'last_read_at' => now()]
         );
         return response()->json([
             'data' => [
                 'book_id' => $id,
                 'current_page' => $progress->current_page,
                 'total_pages' => $progress->total_pages,
-                'progress_percent' => $total ? round(min(100, ($current / $total) * 100), 1) : 0,
+                'progress_percent' => $percent,
+                'status' => $progress->status,
                 'last_read_at' => $progress->last_read_at,
             ],
             'message' => 'Progress saved',

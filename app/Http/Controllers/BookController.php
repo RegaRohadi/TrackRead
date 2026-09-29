@@ -92,6 +92,18 @@ class BookController extends Controller
             ->additional(['message' => 'Book updated successfully']);
     }
 
+    public function updateStatus(Request $request, int $id)
+    {
+        $validated = $request->validate([
+            'status' => ['required', 'string', 'in:to_read,currently_reading,finished,dropped'],
+        ]);
+
+        $book = $this->bookService->updateStatus($id, $validated['status']);
+
+        return (new BookResource($book))
+            ->additional(['message' => 'Book status updated']);
+    }
+
     public function delete(int $id)
     {
         $this->bookService->deleteBook($id);

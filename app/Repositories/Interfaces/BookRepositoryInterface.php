@@ -18,6 +18,8 @@ interface BookRepositoryInterface
 
     public function update(int $id, array $data);
 
+    public function updateStatus(int $id, string $status);
+
     public function delete(int $id);
 
     public function search(string $keyword, int $perPage = 10, array $filters = []);

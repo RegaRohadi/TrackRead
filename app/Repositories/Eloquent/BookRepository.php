@@ -29,8 +29,8 @@ class BookRepository implements BookRepositoryInterface
         $uid = Auth::id();
         return Book::query()->where(function ($q) use ($uid) {
             $q->where(function ($qq) {
-                $qq->where('source', Book::SOURCE_PLATFORM)->whereNull('user_id');
-            })->orWhere('user_id', $uid);
+                $qq->where('books.source', Book::SOURCE_PLATFORM)->whereNull('books.user_id');
+            })->orWhere('books.user_id', $uid);
         });
     }
 
@@ -50,6 +50,9 @@ class BookRepository implements BookRepositoryInterface
                 $book->setAttribute('progress_percent', $pct);
                 $book->setAttribute('last_read_at', $rp->last_read_at);
                 $book->setRelation('readingProgress', $rp);
+                if ($book->source === Book::SOURCE_PLATFORM) {
+                    $book->setAttribute('status', $rp->status ?? Book::STATUS_TO_READ);
+                }
             } else {
                 $book->setAttribute('current_page', null);
                 $book->setAttribute('progress_percent', 0);
@@ -68,15 +71,36 @@ class BookRepository implements BookRepositoryInterface
     {
         switch ($sort) {
             case 'oldest':
-                return $query->orderBy('created_at')->orderBy('id');
+                return $query->orderBy('books.created_at')->orderBy('books.id');
             case 'title':
-                return $query->orderBy('name');
+                return $query->orderBy('books.name');
             case 'author':
-                return $query->orderBy('author');
+                return $query->orderBy('books.author');
             case 'newest':
             default:
-                return $query->orderByDesc('created_at')->orderByDesc('id');
+                return $query->orderByDesc('books.created_at')->orderByDesc('books.id');
         }
+    }
+
+    /**
+     * Effective status is per user: uploaded books keep it on `books.status`,
+     * while shared platform books use the per-user `reading_progress.status`
+     * (falling back to `to_read` when the book has never been touched).
+     */
+    private function effectiveStatusExpression(): string
+    {
+        return "CASE WHEN books.source = 'platform' THEN COALESCE(status_rp.status, 'to_read') ELSE COALESCE(books.status, 'to_read') END";
+    }
+
+    private function applyStatusFilter($query, string $status): void
+    {
+        $uid = Auth::id();
+        $query->select('books.*')
+            ->leftJoin('reading_progress as status_rp', function ($join) use ($uid) {
+                $join->on('status_rp.book_id', '=', 'books.id')
+                    ->where('status_rp.user_id', '=', $uid);
+            })
+            ->whereRaw($this->effectiveStatusExpression() . ' = ?', [$status]);
     }
 
     public function paginate(int $perPage = 10, array $filters = [])
@@ -85,18 +109,18 @@ class BookRepository implements BookRepositoryInterface
 
         if (!empty($filters['source']) && in_array($filters['source'], Book::SOURCES, true)) {
             if ($filters['source'] === Book::SOURCE_PLATFORM) {
-                $query->where('source', Book::SOURCE_PLATFORM)->whereNull('user_id');
+                $query->where('books.source', Book::SOURCE_PLATFORM)->whereNull('books.user_id');
             } else {
-                $query->where('source', Book::SOURCE_UPLOAD)->where('user_id', Auth::id());
+                $query->where('books.source', Book::SOURCE_UPLOAD)->where('books.user_id', Auth::id());
             }
         }
 
         if (!empty($filters['genre'])) {
-            $query->where('genre', $filters['genre']);
+            $query->where('books.genre', $filters['genre']);
         }
 
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $this->applyStatusFilter($query, $filters['status']);
         }
 
         $paginator = $query->paginate($perPage);
@@ -141,6 +165,9 @@ class BookRepository implements BookRepositoryInterface
             $book->setAttribute('progress_percent', $pct);
             $book->setAttribute('last_read_at', $rp->last_read_at);
             $book->setRelation('readingProgress', $rp);
+            if ($book->source === Book::SOURCE_PLATFORM) {
+                $book->setAttribute('status', $rp->status ?? Book::STATUS_TO_READ);
+            }
         } else {
             $book->setAttribute('current_page', null);
             $book->setAttribute('progress_percent', 0);
@@ -235,22 +262,23 @@ class BookRepository implements BookRepositoryInterface
         $query = $this->visibleQuery()
             ->when(!empty($filters['source']), function ($q) use ($filters) {
                 if ($filters['source'] === Book::SOURCE_PLATFORM) {
-                    $q->where('source', Book::SOURCE_PLATFORM)->whereNull('user_id');
+                    $q->where('books.source', Book::SOURCE_PLATFORM)->whereNull('books.user_id');
                 } else {
-                    $q->where('source', Book::SOURCE_UPLOAD)->where('user_id', Auth::id());
+                    $q->where('books.source', Book::SOURCE_UPLOAD)->where('books.user_id', Auth::id());
                 }
             })
             ->when(!empty($filters['genre']), function ($query) use ($filters) {
-                $query->where('genre', $filters['genre']);
-            })
-            ->when(!empty($filters['status']), function ($query) use ($filters) {
-                $query->where('status', $filters['status']);
+                $query->where('books.genre', $filters['genre']);
             })
             ->where(function ($q) use ($keyword) {
-                $q->where('name', 'ilike', "%{$keyword}%")
-                    ->orWhere('author', 'ilike', "%{$keyword}%")
-                    ->orWhere('genre', 'ilike', "%{$keyword}%");
+                $q->where('books.name', 'ilike', "%{$keyword}%")
+                    ->orWhere('books.author', 'ilike', "%{$keyword}%")
+                    ->orWhere('books.genre', 'ilike', "%{$keyword}%");
             });
+
+        if (!empty($filters['status'])) {
+            $this->applyStatusFilter($query, $filters['status']);
+        }
 
         $this->applySort($query, $filters['sort'] ?? null);
 
@@ -260,6 +288,32 @@ class BookRepository implements BookRepositoryInterface
 
     public function getStats(int $userId): array
     {
+        // Uploaded books carry their own status; shared platform books use the
+        // per-user reading_progress.status, so the breakdown is merged to match
+        // what the library and the "Sedang Dibaca" shelf show.
+        $ownedBreakdown = Book::query()
+            ->where('user_id', $userId)
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $platformBreakdown = Book::query()
+            ->where('books.source', Book::SOURCE_PLATFORM)
+            ->whereNull('books.user_id')
+            ->leftJoin('reading_progress as status_rp', function ($join) use ($userId) {
+                $join->on('status_rp.book_id', '=', 'books.id')
+                    ->where('status_rp.user_id', '=', $userId);
+            })
+            ->selectRaw("COALESCE(status_rp.status, 'to_read') as effective_status, count(*) as aggregate")
+            ->groupBy('effective_status')
+            ->pluck('aggregate', 'effective_status');
+
+        $breakdown = [];
+        foreach (Book::STATUSES as $status) {
+            $breakdown[$status] = (int) ($ownedBreakdown[$status] ?? 0)
+                + (int) ($platformBreakdown[$status] ?? 0);
+        }
+
         $visible = fn () => Book::query()->where(function ($q) use ($userId) {
             $q->where(function ($qq) {
                 $qq->where('source', Book::SOURCE_PLATFORM)->whereNull('user_id');
@@ -267,11 +321,6 @@ class BookRepository implements BookRepositoryInterface
         });
 
         $totalBooks = $visible()->count();
-
-        $breakdown = $visible()
-            ->selectRaw('status, count(*) as aggregate')
-            ->groupBy('status')
-            ->pluck('aggregate', 'status');
 
         $totalPages = (int) $visible()
             ->selectRaw('COALESCE(SUM(COALESCE(pdf_total_pages, pages)), 0) as total_pages')
@@ -282,16 +331,33 @@ class BookRepository implements BookRepositoryInterface
 
         return [
             'total_books' => $totalBooks,
-            'status_breakdown' => [
-                'to_read' => (int) ($breakdown['to_read'] ?? 0),
-                'currently_reading' => (int) ($breakdown['currently_reading'] ?? 0),
-                'finished' => (int) ($breakdown['finished'] ?? 0),
-                'dropped' => (int) ($breakdown['dropped'] ?? 0),
-            ],
+            'status_breakdown' => $breakdown,
             'total_pages' => $totalPages,
             'total_pages_read' => (int) $progressPages,
             'completion_percentage' => $completionPercentage,
         ];
+    }
+
+    public function updateStatus(int $id, string $status): Book
+    {
+        $uid = Auth::id();
+        $book = $this->findVisibleOrFail($id);
+
+        if ($book->source === Book::SOURCE_PLATFORM) {
+            ReadingProgress::updateOrCreate(
+                ['user_id' => $uid, 'book_id' => $book->id],
+                ['status' => $status]
+            );
+            $book->setAttribute('status', $status);
+            return $book;
+        }
+
+        if ((int) $book->user_id !== (int) $uid) {
+            abort(403, 'Forbidden');
+        }
+
+        $book->update(['status' => $status]);
+        return $book->fresh();
     }
 
     public function continueReading(int $userId, int $limit = 6)
@@ -312,6 +378,12 @@ class BookRepository implements BookRepositoryInterface
         return $progress->map(function ($rp) {
             $book = $rp->book;
             if (!$book) return null;
+            $effective = $book->source === Book::SOURCE_PLATFORM
+                ? ($rp->status ?? Book::STATUS_TO_READ)
+                : ($book->status ?? Book::STATUS_TO_READ);
+            if (in_array($effective, [Book::STATUS_FINISHED, Book::STATUS_DROPPED], true)) {
+                return null;
+            }
             $tp = $rp->total_pages ?: ($book->pdf_total_pages ?: $book->pages);
             $pct = $tp ? round(min(100, ($rp->current_page / $tp) * 100), 1) : 0;
             if ($pct >= 100) return null;
@@ -319,6 +391,7 @@ class BookRepository implements BookRepositoryInterface
             $book->setAttribute('progress_percent', $pct);
             $book->setAttribute('last_read_at', $rp->last_read_at);
             $book->setAttribute('total_pages_progress', $rp->total_pages);
+            $book->setAttribute('status', $effective);
             $book->setRelation('readingProgress', $rp);
             return $book;
         })->filter()->values();

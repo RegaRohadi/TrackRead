@@ -14,6 +14,7 @@ class ReadingProgress extends Model
         'book_id',
         'current_page',
         'total_pages',
+        'status',
         'last_read_at',
     ];
 
