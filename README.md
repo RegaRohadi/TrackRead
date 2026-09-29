@@ -1,4 +1,4 @@
-# 📖 TrackRead
+# TrackRead
 
 TrackRead adalah aplikasi manajemen buku pribadi dan pelacak progres bacaan. Repo ini adalah monorepo yang berisi dua bagian:
 
@@ -7,7 +7,7 @@ TrackRead adalah aplikasi manajemen buku pribadi dan pelacak progres bacaan. Rep
 
 ---
 
-## ✨ Ringkasan Aplikasi
+## Ringkasan Aplikasi
 
 | Bagian | Teknologi |
 | :--- | :--- |
@@ -17,17 +17,17 @@ TrackRead adalah aplikasi manajemen buku pribadi dan pelacak progres bacaan. Rep
 
 Fitur utama:
 
-- 🔐 **Autentikasi** — login & register, sesi Pinia, token Bearer Sanctum.
-- 📚 **Manajemen buku** — tambah, edit, hapus, upload PDF/EPUB beserta cover, tampilan grid responsif.
-- 📖 **Reader bawaan** — baca **PDF** (pdf.js) dan **EPUB** (epub.js) dengan progres tersimpan otomatis.
-- 📊 **Progress & statistik** — progress bar dinamis (`pages_read / total_pages`).
-- 🔎 **Pencarian & filter** — pencarian real-time (judul/penulis/ISBN) dan filter genre.
-- 🎨 **UI modern** — responsif dengan TailwindCSS v4, modal, dan SweetAlert2.
-- 🧪 **Testing** — Vitest & Playwright (frontend), PHPUnit (backend).
+- **Autentikasi** — login & register, sesi Pinia, token Bearer Sanctum.
+- **Manajemen buku** — tambah, edit, hapus, upload PDF/EPUB beserta cover, tampilan grid responsif.
+- **Reader bawaan** — baca PDF (pdf.js) dan EPUB (epub.js) dengan progres tersimpan otomatis.
+- **Progress & statistik** — progress bar dinamis (`pages_read / total_pages`).
+- **Pencarian & filter** — pencarian real-time (judul/penulis/ISBN) dan filter genre.
+- **UI modern** — responsif dengan TailwindCSS v4, modal, dan SweetAlert2.
+- **Testing** — Vitest & Playwright (frontend), PHPUnit (backend).
 
 ---
 
-## 🚀 Cara Setup (Docker — Direkomendasikan)
+## Cara Setup (Docker — Direkomendasikan)
 
 Jalankan dari **root repository**:
 
@@ -71,7 +71,7 @@ Frontend mem-proxy `/api/` dan `/storage/` ke `trackread-nginx`, sehingga SPA da
 
 ---
 
-## 📁 Struktur Repository
+## Struktur Repository
 
 ```
 .
@@ -88,7 +88,7 @@ Frontend mem-proxy `/api/` dan `/storage/` ke `trackread-nginx`, sehingga SPA da
 
 ---
 
-## 🔑 Environment
+## Environment
 
 Ada **satu `.env` di root** yang dipakai bersama oleh:
 
@@ -111,7 +111,7 @@ Build Docker frontend menimpanya dengan path relatif (`/api/v1`, `/storage`) aga
 
 ---
 
-## 💻 Menjalankan Lokal (Tanpa Docker)
+## Menjalankan Lokal (Tanpa Docker)
 
 **Backend** (butuh PHP 8.2+ dengan ekstensi `pdo_pgsql`, `mbstring`, `gd`, `zip`):
 
@@ -135,35 +135,35 @@ npm run dev                    # http://localhost:5173
 
 ---
 
-## 🛠️ API Endpoints
+## API Endpoints
 
-### 🔐 Autentikasi (`/api/v1/auth`)
-
-| Method | Endpoint | Deskripsi | Protected |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/register` | Registrasi akun baru | ❌ |
-| `POST` | `/auth/login` | Login & dapatkan token | ❌ |
-| `POST` | `/auth/logout` | Cabut token aktif | ✅ |
-| `GET` | `/auth/me` | Profil user yang login | ✅ |
-| `POST` | `/auth/change-password` | Ubah password | ✅ |
-
-### 📚 Manajemen Buku (`/api/v1/books`)
+### Autentikasi (`/api/v1/auth`)
 
 | Method | Endpoint | Deskripsi | Protected |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/books` | Daftar buku (paginasi: `?genre=&page=&per_page=`) | ✅ |
-| `GET` | `/books/genres` | Daftar genre unik milik user | ✅ |
-| `GET` | `/books/search` | Cari buku (`?q=&genre=&page=`) | ✅ |
-| `GET` | `/books/{id}/file` | Stream file PDF/EPUB | ✅ |
-| `POST` | `/books` | Tambah buku (multipart: `cover` + `pdf`/epub opsional) | ✅ |
-| `PUT` | `/books/{id}` | Update detail buku / progres | ✅ |
-| `DELETE` | `/books/{id}` | Hapus buku | ✅ |
+| `POST` | `/auth/register` | Registrasi akun baru | Tidak |
+| `POST` | `/auth/login` | Login & dapatkan token | Tidak |
+| `POST` | `/auth/logout` | Cabut token aktif | Ya |
+| `GET` | `/auth/me` | Profil user yang login | Ya |
+| `POST` | `/auth/change-password` | Ubah password | Ya |
+
+### Manajemen Buku (`/api/v1/books`)
+
+| Method | Endpoint | Deskripsi | Protected |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/books` | Daftar buku (paginasi: `?genre=&page=&per_page=`) | Ya |
+| `GET` | `/books/genres` | Daftar genre unik milik user | Ya |
+| `GET` | `/books/search` | Cari buku (`?q=&genre=&page=`) | Ya |
+| `GET` | `/books/{id}/file` | Stream file PDF/EPUB | Ya |
+| `POST` | `/books` | Tambah buku (multipart: `cover` + `pdf`/epub opsional) | Ya |
+| `PUT` | `/books/{id}` | Update detail buku / progres | Ya |
+| `DELETE` | `/books/{id}` | Hapus buku | Ya |
 
 Arsitektur backend: clean layered — Controllers → Form Requests → Services → Repositories (Eloquent) → Models & Migrations, dengan multi-tenancy per user.
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Backend (PHPUnit)
@@ -179,7 +179,7 @@ npm run lint
 
 ---
 
-## ☁️ Catatan Produksi
+## Catatan Produksi
 
 - Host nginx (`trackread.regazgaz.online`) mem-proxy ke `127.0.0.1:5174`, jadi **port host frontend wajib tetap `5174`**.
 - Pertahankan nama project Compose `trackread` agar volume database `trackread_postgres_data` tetap dipakai.
@@ -187,6 +187,6 @@ npm run lint
 
 ---
 
-## 📄 License
+## License
 
 This project is open-source under the [MIT License](LICENSE).
