@@ -43,9 +43,9 @@ const barClass = computed(() => ({
       aria-valuemax="100"
     >
       <div
-        class="h-full rounded-full transition-all duration-300"
+        class="h-full w-full origin-left rounded-full transition-transform duration-300"
         :class="barClass"
-        :style="{ width: `${progress}%` }"
+        :style="{ transform: `scaleX(${progress / 100})` }"
       />
     </div>
   </div>

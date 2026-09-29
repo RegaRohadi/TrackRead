@@ -21,8 +21,8 @@ const isFinished = computed(() => props.book.status === "finished");
 </script>
 
 <template>
-  <div class="group flex flex-col gap-2">
-    <div class="relative aspect-[2/3] w-full origin-left overflow-hidden rounded-[8px] bg-gray6 shadow-[0_1px_3px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-out will-change-transform group-hover:[transform:perspective(900px)_translateY(-4px)_rotateY(-16deg)_rotateX(3deg)] group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)]">
+  <div class="flex flex-col gap-2">
+    <div class="relative aspect-[2/3] w-full origin-left overflow-hidden rounded-[8px] bg-gray6 shadow-[0_1px_3px_rgba(0,0,0,0.14)] transition-transform duration-300 ease-out will-change-transform group-hover:[transform:perspective(900px)_translateY(-4px)_rotateY(-16deg)_rotateX(3deg)] group-hover:shadow-[0_12px_28px_rgba(0,0,0,0.28)] group-active:[transform:perspective(900px)_translateY(-2px)_rotateY(-10deg)_rotateX(2deg)] group-active:shadow-[0_10px_22px_rgba(0,0,0,0.24)]">
       <CoverImage :cover="book.cover" :cover-url="book.cover_url" :title="book.name" :author="book.author" />
       <ProgressRing
         v-if="isReading"

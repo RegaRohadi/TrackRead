@@ -1,7 +1,7 @@
 import { ref, reactive } from "vue";
 import Swal from "sweetalert2";
 import "sweetalert2/dist/sweetalert2.min.css";
-import type { Book, ReadingStats, ExternalBookResult, BookSource } from "@/types/book";
+import type { Book, ReadingStats, ExternalBookResult, BookSource, ReadingStatus } from "@/types/book";
 import BookService from "@/services/bookservice";
 import openLibraryService from "@/services/openLibraryService";
 
@@ -10,6 +10,12 @@ export function bookFileType(file: File): "pdf" | "epub" | null {
   if (name.endsWith(".pdf")) return "pdf";
   if (name.endsWith(".epub")) return "epub";
   return null;
+}
+
+function token(name: string, fallback: string): string {
+  if (typeof window === "undefined") return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
 }
 
 export function useBooks() {
@@ -65,7 +71,6 @@ export function useBooks() {
   const setYearlyGoal = (newGoal: number) => {
     yearlyGoal.value = Math.max(1, newGoal);
     localStorage.setItem("trackread_yearly_goal", String(yearlyGoal.value));
-    showSuccess(`Target membaca tahunan diperbarui: ${yearlyGoal.value} buku`);
   };
 
   const coverPreviewUrl = ref<string | null>(null);
@@ -414,8 +419,8 @@ export function useBooks() {
       text: "Data buku yang dihapus tidak dapat dipulihkan.",
       icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: "#ef4444",
-      cancelButtonColor: "#64748b",
+      confirmButtonColor: token("--ios-red", "#ff3b30"),
+      cancelButtonColor: token("--ios-gray", "#8e8e93"),
       confirmButtonText: "Ya, Hapus!",
       cancelButtonText: "Batal",
     });
@@ -439,6 +444,27 @@ export function useBooks() {
   const submitForm = async () => {
     if (isEdit.value) await updateBook();
     else await createBook();
+  };
+
+  const updateStatus = async (book: Book, status: ReadingStatus) => {
+    const previous = book.status ?? "to_read";
+    if (previous === status) return book;
+    try {
+      const updated = await BookService.updateStatus(book.id, status);
+      books.value = books.value.map((b) => (b.id === book.id ? { ...b, ...updated, status } : b));
+      if (stats.value) {
+        stats.value.status_breakdown[previous] = Math.max(0, (stats.value.status_breakdown[previous] ?? 0) - 1);
+        stats.value.status_breakdown[status] = (stats.value.status_breakdown[status] ?? 0) + 1;
+      }
+      showSuccess("Status buku diperbarui.");
+      // The "Sedang Dibaca" shelf follows reading status, so refetch it (and
+      // the stats) to reflect both directions of the change.
+      void Promise.all([getStats(), getContinueReading()]);
+      return updated;
+    } catch {
+      showError("Gagal memperbarui status buku.");
+      return null;
+    }
   };
 
   const setPage = async (pageNumber: number) => {
@@ -514,6 +540,7 @@ export function useBooks() {
     clearSearch,
     setYearlyGoal,
     submitForm,
+    updateStatus,
     deleteBook,
     autofillFromExternal,
     uploadBook,

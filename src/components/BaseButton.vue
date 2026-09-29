@@ -25,9 +25,9 @@ withDefaults(defineProps<Props>(), {
       size === 'sm' ? 'rounded-[8px] px-3 py-1.5 text-[13px]' : 'rounded-[10px] px-4 py-2.5 text-[15px]',
 
       variant === 'primary' && 'bg-blue text-white active:opacity-80',
-      variant === 'secondary' && 'bg-fill text-blue active:opacity-70',
-      variant === 'ghost' && 'text-blue active:opacity-60',
-      variant === 'danger' && 'text-red active:opacity-60',
+      variant === 'secondary' && 'bg-fill text-blue-text active:opacity-70',
+      variant === 'ghost' && 'text-blue-text active:opacity-60',
+      variant === 'danger' && 'text-red-text active:opacity-60',
 
       (disabled || loading) && 'cursor-not-allowed opacity-40'
     ]"

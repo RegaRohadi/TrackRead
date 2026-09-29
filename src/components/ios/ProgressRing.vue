@@ -58,7 +58,7 @@ const progressColor = computed(() => (props.overlay ? "#ffffff" : "var(--ios-blu
     </svg>
     <span
       v-if="overlay"
-      class="absolute text-[9px] font-semibold text-white tabular-nums"
+      class="absolute text-[11px] font-semibold text-white tabular-nums"
     >
       {{ clamped }}%
     </span>

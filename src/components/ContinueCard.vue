@@ -5,7 +5,7 @@ import type { Book } from "@/types/book";
 import CoverImage from "./ios/CoverImage.vue";
 
 const props = defineProps<{ book: Book }>();
-const emit = defineEmits<{ (e: "open"): void }>();
+const emit = defineEmits<{ (e: "open"): void; (e: "read"): void }>();
 
 const progressPercent = computed(() => {
   if (props.book.progress_percent !== undefined && props.book.progress_percent !== null) return Math.round(props.book.progress_percent);
@@ -21,10 +21,13 @@ const totalPages = computed(() => props.book.pdf_total_pages ?? props.book.pages
 </script>
 
 <template>
-  <button
-    type="button"
-    class="flex w-full items-center gap-3 rounded-[14px] bg-card p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-transform active:scale-[0.99]"
+  <div
+    role="button"
+    tabindex="0"
+    class="flex w-full cursor-pointer items-center gap-3 rounded-[14px] bg-card p-3 text-left shadow-[0_1px_2px_rgba(0,0,0,0.08)] transition-transform active:scale-[0.99]"
     @click="emit('open')"
+    @keydown.enter="emit('open')"
+    @keydown.space.prevent="emit('open')"
   >
     <div class="h-[72px] w-[50px] shrink-0 overflow-hidden rounded-[6px]">
       <CoverImage :cover="book.cover" :cover-url="book.cover_url" :title="book.name" :author="book.author" />
@@ -39,8 +42,14 @@ const totalPages = computed(() => props.book.pdf_total_pages ?? props.book.pages
         <span class="text-[12px] text-label2 tabular-nums">hal {{ currentPage }}/{{ totalPages }}</span>
       </div>
     </div>
-    <span class="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-blue text-white">
+    <button
+      type="button"
+      class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-blue text-white active:opacity-70 lg:h-9 lg:w-9"
+      aria-label="Lanjutkan baca"
+      title="Lanjutkan baca"
+      @click.stop="emit('read')"
+    >
       <PhPlay :size="15" weight="fill" />
-    </span>
-  </button>
+    </button>
+  </div>
 </template>

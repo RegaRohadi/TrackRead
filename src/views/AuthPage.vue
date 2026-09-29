@@ -1,17 +1,16 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { PhSun, PhMoon } from '@phosphor-icons/vue';
+import { PhEye, PhEyeSlash } from '@phosphor-icons/vue';
 
 import { useAuthStore } from '@/stores/auth';
-import { useTheme } from '@/composables/useTheme';
 import SegmentedControl from '@/components/ios/SegmentedControl.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { theme, toggleTheme } = useTheme();
 const logo = "/logo-mark.png";
 
+const showPassword = ref(false);
 const isLogin = reactive({ value: true });
 const form = reactive({
   name: '',
@@ -102,23 +101,13 @@ function toggleMode() {
 
 <template>
   <div class="relative flex min-h-screen items-center justify-center bg-grouped px-4 py-10">
-    <button
-      @click="toggleTheme"
-      class="absolute top-5 right-5 grid h-9 w-9 place-items-center rounded-full bg-fill text-label2 active:opacity-70"
-      :aria-label="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
-      :title="theme === 'dark' ? 'Mode terang' : 'Mode gelap'"
-    >
-      <PhMoon v-if="theme === 'dark'" :size="18" weight="fill" />
-      <PhSun v-else :size="18" weight="fill" />
-    </button>
-
     <div class="w-full max-w-sm">
       <div class="mb-8 flex flex-col items-center text-center">
         <img :src="logo" alt="TrackRead" class="h-20 w-20 rounded-[20px] shadow-[0_10px_28px_rgba(78,90,43,0.22)]" />
         <p class="font-logo mt-4 text-[30px] leading-none font-semibold tracking-[-0.01em]">
           <span class="text-[#4E5A2B] dark:text-[#C3CF95]">Track</span><span class="text-[#B0562C] dark:text-[#D27A4E]">Read</span>
         </p>
-        <p class="mt-2 text-[10px] font-semibold tracking-[0.22em] text-[#4E5A2B]/70 uppercase dark:text-[#C3CF95]/70">Track your reading. Grow every day.</p>
+        <p class="mt-2 text-[11px] font-semibold tracking-[0.22em] text-[#4E5A2B]/70 uppercase dark:text-[#C3CF95]/70">Track your reading. Grow every day.</p>
       </div>
       <h1 class="sr-only">{{ isLogin ? 'Masuk' : 'Buat Akun' }}</h1>
 
@@ -134,13 +123,14 @@ function toggleMode() {
           <input
             v-model="form.name"
             type="text"
+            autocomplete="name"
             class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
             :class="touched.name && nameError ? 'ring-2 ring-red' : ''"
             placeholder="Nama lengkap"
             required
             @blur="touched.name = true"
           />
-          <p v-if="touched.name && nameError" class="mt-1 px-1 text-[13px] text-red">{{ nameError }}</p>
+          <p v-if="touched.name && nameError" class="mt-1 px-1 text-[13px] text-red-text">{{ nameError }}</p>
         </div>
 
         <div>
@@ -148,44 +138,60 @@ function toggleMode() {
           <input
             v-model="form.email"
             type="email"
+            autocomplete="email"
+            inputmode="email"
             class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
             :class="touched.email && emailError ? 'ring-2 ring-red' : ''"
             placeholder="email@example.com"
             required
             @blur="touched.email = true"
           />
-          <p v-if="touched.email && emailError" class="mt-1 px-1 text-[13px] text-red">{{ emailError }}</p>
+          <p v-if="touched.email && emailError" class="mt-1 px-1 text-[13px] text-red-text">{{ emailError }}</p>
         </div>
 
         <div>
           <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Password</label>
-          <input
-            v-model="form.password"
-            type="password"
-            class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
-            :class="touched.password && passwordError ? 'ring-2 ring-red' : ''"
-            placeholder="Minimal 8 karakter"
-            required
-            @blur="touched.password = true"
-          />
-          <p v-if="touched.password && passwordError" class="mt-1 px-1 text-[13px] text-red">{{ passwordError }}</p>
+          <div class="relative">
+            <input
+              v-model="form.password"
+              :type="showPassword ? 'text' : 'password'"
+              :autocomplete="isLogin.value ? 'current-password' : 'new-password'"
+              class="w-full rounded-[10px] bg-fill py-3 pr-12 pl-3.5 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
+              :class="touched.password && passwordError ? 'ring-2 ring-red' : ''"
+              placeholder="Minimal 8 karakter"
+              required
+              @blur="touched.password = true"
+            />
+            <button
+              type="button"
+              class="absolute inset-y-0 right-0 grid w-11 place-items-center text-label2 active:opacity-60"
+              :aria-label="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+              :title="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+              @click="showPassword = !showPassword"
+            >
+              <PhEyeSlash v-if="showPassword" :size="19" />
+              <PhEye v-else :size="19" />
+            </button>
+          </div>
+          <p v-if="touched.password && passwordError" class="mt-1 px-1 text-[13px] text-red-text">{{ passwordError }}</p>
         </div>
 
         <div v-if="!isLogin.value">
           <label class="mb-1.5 block px-1 text-[13px] font-medium text-label2">Konfirmasi Password</label>
           <input
             v-model="form.passwordConfirmation"
-            type="password"
+            :type="showPassword ? 'text' : 'password'"
+            autocomplete="new-password"
             class="w-full rounded-[10px] bg-fill px-3.5 py-3 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
             :class="touched.passwordConfirmation && passwordConfirmationError ? 'ring-2 ring-red' : ''"
             placeholder="Ulangi password"
             required
             @blur="touched.passwordConfirmation = true"
           />
-          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 px-1 text-[13px] text-red">{{ passwordConfirmationError }}</p>
+          <p v-if="touched.passwordConfirmation && passwordConfirmationError" class="mt-1 px-1 text-[13px] text-red-text">{{ passwordConfirmationError }}</p>
         </div>
 
-        <p v-if="authStore.error" class="rounded-[10px] bg-red/10 px-3 py-2 text-[13px] font-medium text-red">
+        <p v-if="authStore.error" role="alert" class="rounded-[10px] bg-red/10 px-3 py-2 text-[13px] font-medium text-red-text">
           {{ authStore.error }}
         </p>
 
@@ -200,7 +206,7 @@ function toggleMode() {
 
       <p class="mt-6 text-center text-[15px] text-label2">
         {{ toggleLabel }}
-        <button class="font-semibold text-blue active:opacity-60" @click="toggleMode">
+        <button class="tap-expand font-semibold text-blue-text active:opacity-60" @click="toggleMode">
           {{ isLogin.value ? 'Daftar' : 'Masuk' }}
         </button>
       </p>

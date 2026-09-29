@@ -25,7 +25,7 @@ const emit = defineEmits<{
       v-if="label"
       class="mb-1.5 block px-1 text-[13px] font-medium text-label2"
     >
-      {{ label }}<span v-if="required" class="text-red"> *</span>
+      {{ label }}<span v-if="required" class="text-red-text"> *</span>
     </label>
 
     <input
@@ -37,7 +37,7 @@ const emit = defineEmits<{
       class="w-full rounded-[10px] bg-fill px-3.5 py-2.5 text-[16px] text-label transition-shadow placeholder:text-label3 focus:outline-none focus:ring-2 focus:ring-blue"
     />
 
-    <p v-if="error" class="mt-1 px-1 text-[13px] text-red">{{ error }}</p>
+    <p v-if="error" class="mt-1 px-1 text-[13px] text-red-text">{{ error }}</p>
     <p v-else-if="hint" class="mt-1 px-1 text-[13px] text-label2">{{ hint }}</p>
   </div>
 </template>

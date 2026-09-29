@@ -52,7 +52,7 @@ function selectBook(book: ExternalBookResult) {
         class="min-w-0 flex-1 border-none bg-transparent text-[16px] text-label outline-none placeholder:text-label3"
         autofocus
       />
-      <button type="submit" :disabled="isSearching || !searchQuery.trim()" class="shrink-0 text-[15px] font-semibold text-blue disabled:opacity-40">
+      <button type="submit" :disabled="isSearching || !searchQuery.trim()" class="tap-expand shrink-0 text-[15px] font-semibold text-blue-text disabled:opacity-40">
         {{ isSearching ? "..." : "Cari" }}
       </button>
     </form>
@@ -89,7 +89,7 @@ function selectBook(book: ExternalBookResult) {
               <span v-if="book.publishedDate">{{ book.publishedDate }} · </span>{{ book.source === "google" ? "Google Books" : "Open Library" }}
             </p>
           </div>
-          <PhPlus :size="18" weight="bold" class="shrink-0 text-blue" />
+          <PhPlus :size="18" weight="bold" class="shrink-0 text-blue-text" />
         </button>
       </div>
     </div>

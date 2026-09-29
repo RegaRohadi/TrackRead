@@ -17,7 +17,7 @@
     <button
       v-if="query"
       type="button"
-      class="shrink-0 text-label3 transition-colors active:opacity-60"
+      class="tap-expand shrink-0 text-label3 transition-colors active:opacity-60"
       aria-label="Hapus pencarian"
       @click="clearQuery"
     >

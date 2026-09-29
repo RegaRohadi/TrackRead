@@ -98,11 +98,11 @@ function removeCover() {
       @drop.prevent="onDrop"
     >
       <PhImageSquare :size="30" class="text-label3" weight="regular" />
-      <p class="text-[15px] text-label"><span class="font-semibold text-blue">Ketuk untuk unggah</span> atau seret ke sini</p>
+      <p class="text-[15px] text-label"><span class="font-semibold text-blue-text">Ketuk untuk unggah</span> atau seret ke sini</p>
       <p class="text-[13px] text-label2">PNG, JPG hingga {{ MAX_SIZE_MB }}MB</p>
       <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onCoverChange">
     </label>
 
-    <p v-if="error" class="mt-2 px-1 text-[13px] text-red">{{ error }}</p>
+    <p v-if="error" class="mt-2 px-1 text-[13px] text-red-text">{{ error }}</p>
   </div>
 </template>

@@ -68,26 +68,26 @@ function close() {
       class="flex cursor-pointer flex-col items-center justify-center rounded-[12px] border border-dashed px-6 py-9 text-center transition-colors"
       :class="dragOver ? 'border-blue bg-blue/5' : 'border-gray3 active:bg-fill'"
     >
-      <PhFilePdf :size="34" class="text-blue" weight="regular" />
+      <PhFilePdf :size="34" class="text-blue-text" weight="regular" />
       <p class="mt-2 text-[15px] font-medium text-label">Pilih PDF/EPUB atau seret ke sini</p>
       <p class="text-[13px] text-label2">PDF · EPUB · maks 50MB · privat</p>
       <input ref="fileInput" type="file" accept=".pdf,.epub,application/pdf,application/epub+zip" class="hidden" @change="onInputChange" />
     </div>
 
     <div v-if="file" class="mt-3 flex items-center gap-3 rounded-[10px] bg-fill px-3 py-2.5">
-      <PhFileZip v-if="fileType === 'epub'" :size="20" weight="fill" class="shrink-0 text-blue" />
-      <PhFilePdf v-else :size="20" weight="fill" class="shrink-0 text-blue" />
+      <PhFileZip v-if="fileType === 'epub'" :size="20" weight="fill" class="shrink-0 text-blue-text" />
+      <PhFilePdf v-else :size="20" weight="fill" class="shrink-0 text-blue-text" />
       <div class="min-w-0 flex-1">
         <p class="truncate text-[15px] font-medium text-label">{{ file.name }}</p>
         <p class="text-[13px] text-label2">{{ (file.size / 1024 / 1024).toFixed(2) }} MB · {{ fileType?.toUpperCase() }}</p>
       </div>
-      <button class="shrink-0 text-label3 active:opacity-60" @click.stop="file = null" :disabled="uploading" aria-label="Hapus file">
+      <button class="tap-expand shrink-0 text-label3 active:opacity-60" @click.stop="file = null" :disabled="uploading" aria-label="Hapus file">
         <PhWarning v-if="uploading" :size="16" />
         <span v-else class="text-[13px] font-medium">Ganti</span>
       </button>
     </div>
 
-    <p v-if="error" class="mt-3 flex items-center gap-2 rounded-[10px] bg-red/10 px-3 py-2 text-[13px] font-medium text-red">
+    <p v-if="error" class="mt-3 flex items-center gap-2 rounded-[10px] bg-red/10 px-3 py-2 text-[13px] font-medium text-red-text">
       <PhWarning :size="14" weight="fill" /> {{ error }}
     </p>
 
@@ -99,7 +99,7 @@ function close() {
 
     <div v-if="uploading" class="mt-4">
       <div class="mb-1 flex justify-between text-[13px] text-label2"><span>Mengunggah...</span><span class="tabular-nums">{{ progress }}%</span></div>
-      <div class="h-1.5 overflow-hidden rounded-full bg-gray5"><div class="h-full rounded-full bg-blue transition-all" :style="{ width: progress + '%' }"></div></div>
+      <div class="h-1.5 overflow-hidden rounded-full bg-gray5"><div class="h-full w-full origin-left rounded-full bg-blue transition-transform" :style="{ transform: `scaleX(${progress / 100})` }"></div></div>
     </div>
 
     <div class="mt-5 flex justify-end gap-2">

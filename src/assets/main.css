@@ -2,20 +2,27 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* iOS system color tokens (light) */
+/* iOS system color tokens (light).
+   Text-bearing tokens are tuned to meet WCAG 4.5:1 for text / 3:1 for non-text
+   against the surfaces they are drawn on. Filled variants stay at the system
+   accent so white-on-fill still passes. */
 :root {
   --ios-bg: #ffffff;
   --ios-bg2: #f2f2f7;
   --ios-grouped: #f2f2f7;
   --ios-card: #ffffff;
   --ios-label: #000000;
-  --ios-label2: rgba(60, 60, 67, 0.6);
-  --ios-label3: rgba(60, 60, 67, 0.3);
+  --ios-label2: rgba(60, 60, 67, 0.78);
+  --ios-label3: rgba(60, 60, 67, 0.72);
   --ios-sep: rgba(60, 60, 67, 0.29);
-  --ios-blue: #007aff;
+  --ios-blue: #0066cc;
+  --ios-blue-text: #0066cc;
   --ios-red: #ff3b30;
+  --ios-red-text: #c7362b;
   --ios-green: #34c759;
+  --ios-green-text: #1e7a35;
   --ios-orange: #ff9500;
+  --ios-orange-text: #a85b00;
   --ios-gray: #8e8e93;
   --ios-gray2: #aeaeb2;
   --ios-gray3: #c7c7cc;
@@ -24,8 +31,9 @@
   --ios-gray6: #f2f2f7;
   --ios-fill: rgba(120, 120, 128, 0.12);
   --ios-fill2: rgba(120, 120, 128, 0.16);
-  --ios-bar: rgba(249, 249, 249, 0.94);
+  --ios-bar: rgba(249, 249, 249, 0.72);
   --ios-search: rgba(118, 118, 128, 0.12);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .dark {
@@ -35,12 +43,16 @@
   --ios-card: #1c1c1e;
   --ios-label: #ffffff;
   --ios-label2: rgba(235, 235, 245, 0.6);
-  --ios-label3: rgba(235, 235, 245, 0.3);
+  --ios-label3: rgba(235, 235, 245, 0.62);
   --ios-sep: rgba(84, 84, 88, 0.65);
   --ios-blue: #0a84ff;
+  --ios-blue-text: #409cff;
   --ios-red: #ff453a;
+  --ios-red-text: #ff453a;
   --ios-green: #30d158;
+  --ios-green-text: #30d158;
   --ios-orange: #ff9f0a;
+  --ios-orange-text: #ff9f0a;
   --ios-gray: #8e8e93;
   --ios-gray2: #636366;
   --ios-gray3: #48484a;
@@ -49,8 +61,9 @@
   --ios-gray6: #1c1c1e;
   --ios-fill: rgba(120, 120, 128, 0.24);
   --ios-fill2: rgba(120, 120, 128, 0.32);
-  --ios-bar: rgba(30, 30, 30, 0.94);
+  --ios-bar: rgba(28, 28, 30, 0.72);
   --ios-search: rgba(118, 118, 128, 0.24);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @theme inline {
@@ -63,9 +76,13 @@
   --color-label3: var(--ios-label3);
   --color-sep: var(--ios-sep);
   --color-blue: var(--ios-blue);
+  --color-blue-text: var(--ios-blue-text);
   --color-red: var(--ios-red);
+  --color-red-text: var(--ios-red-text);
   --color-green: var(--ios-green);
+  --color-green-text: var(--ios-green-text);
   --color-orange: var(--ios-orange);
+  --color-orange-text: var(--ios-orange-text);
   --color-gray: var(--ios-gray);
   --color-gray2: var(--ios-gray2);
   --color-gray3: var(--ios-gray3);
@@ -133,5 +150,81 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Apple's third accessibility signal: replace translucent materials with solid
+   surfaces and drop the blur. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --ios-bar: #f9f9f9;
+    --ios-fill: rgba(120, 120, 128, 0.16);
+    --ios-search: rgba(118, 118, 128, 0.16);
+  }
+  .dark {
+    --ios-bar: #1c1c1e;
+  }
+  [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+  }
+}
+
+/* Increased contrast: push separators and secondary text closer to the label. */
+@media (prefers-contrast: more) {
+  :root {
+    --ios-label2: rgba(60, 60, 67, 0.95);
+    --ios-label3: rgba(60, 60, 67, 0.9);
+    --ios-sep: rgba(60, 60, 67, 0.6);
+    --ios-blue-text: #004a99;
+  }
+  .dark {
+    --ios-label2: rgba(235, 235, 245, 0.92);
+    --ios-label3: rgba(235, 235, 245, 0.9);
+    --ios-sep: rgba(84, 84, 88, 0.9);
+    --ios-blue-text: #8ec2ff;
+  }
+}
+
+/* SweetAlert is a third-party surface; bring it onto the token system instead
+   of its default palette. */
+.swal2-popup {
+  background: var(--ios-card) !important;
+  color: var(--ios-label) !important;
+  border-radius: var(--radius-lg) !important;
+}
+.swal2-title,
+.swal2-html-container {
+  color: var(--ios-label) !important;
+}
+.swal2-toast {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18) !important;
+}
+
+@layer utilities {
+  /* Guarantee a 44x44 minimum hit area without changing the visual size. */
+  .tap-expand {
+    position: relative;
+  }
+  .tap-expand::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Anchored popovers materialize from their trigger corner. */
+  .pop-enter-active,
+  .pop-leave-active {
+    transition:
+      opacity 160ms var(--ease-out-quint),
+      transform 160ms var(--ease-out-quint);
+  }
+  .pop-enter-from,
+  .pop-leave-to {
+    opacity: 0;
+    transform: scale(0.96);
   }
 }

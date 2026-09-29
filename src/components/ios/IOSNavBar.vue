@@ -17,7 +17,7 @@ const emit = defineEmits<{
     <button
       v-if="back"
       type="button"
-      class="mb-1 flex items-center gap-0.5 text-[17px] text-blue"
+      class="mb-1 flex items-center gap-0.5 text-[17px] text-blue-text"
       @click="emit('back')"
     >
       <PhCaretLeft :size="18" weight="bold" />

@@ -1,5 +1,5 @@
 import api from "./api";
-import type { Book } from "@/types/book";
+import type { Book, ReadingStatus } from "@/types/book";
 import type { ApiResponse } from "@/types/api";
 
 class BookService {
@@ -64,6 +64,11 @@ class BookService {
 
   async delete(id: number) {
     await api.delete(`/books/${id}`);
+  }
+
+  async updateStatus(id: number, status: ReadingStatus) {
+    const response = await api.patch<{ data: Book }>(`/books/${id}/status`, { status });
+    return response.data.data;
   }
 
   async search(query: string, params: Record<string, unknown> = {}) {
