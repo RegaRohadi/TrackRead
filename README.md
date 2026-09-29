@@ -159,6 +159,14 @@ Arsitektur backend: clean layered — Controllers → Form Requests → Services
 
 ## Testing
 
+Test backend memakai database khusus `trackread_test` dan **menghapus isinya setiap kali dijalankan** (`RefreshDatabase`), jadi jangan pernah mengarahkannya ke database aplikasi. Database ini dibuat otomatis saat volume Postgres masih baru; untuk volume yang sudah ada, buat sekali:
+
+```bash
+docker compose exec postgres psql -U trackread -d postgres -c "CREATE DATABASE trackread_test OWNER trackread;"
+```
+
+Sebagai pengaman, aplikasi menolak menjalankan test bila nama database bukan berakhiran `_test`.
+
 ```bash
 # Backend (PHPUnit)
 docker compose exec php php artisan test
