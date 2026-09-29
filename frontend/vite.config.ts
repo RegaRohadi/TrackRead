@@ -7,7 +7,9 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  // Dev/tests read the single root .env; the Docker build injects VITE_* via build args.
+  envDir: mode === 'docker' ? undefined : fileURLToPath(new URL('..', import.meta.url)),
   plugins: [
     vue(),
     tailwindcss(),
@@ -19,4 +21,4 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-})
+}))
