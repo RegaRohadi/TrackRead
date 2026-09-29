@@ -46,31 +46,25 @@ REST API backend for **TrackRead** — a personal book management and reading pr
 
 ## 🐳 Running with Docker (Recommended)
 
-1. **Copy Environment File:**
+> Run these commands from the **repository root**; a single `docker-compose.yml`
+> there starts PostgreSQL, the API and the frontend together.
+
+1. **Copy Environment File (root):**
    ```bash
    cp .env.example .env
    ```
-   *Ensure database settings in `.env` match Docker:*
-   ```env
-   DB_CONNECTION=pgsql
-   DB_HOST=postgres
-   DB_PORT=5432
-   DB_DATABASE=trackread
-   DB_USERNAME=trackread
-   DB_PASSWORD=trackread123
-   ```
+   *Fill in the values you need. For Docker, `docker-compose.yml` provides safe
+   defaults (`DB_HOST=postgres`, etc.) so it boots even with a blank `.env`.*
 
 2. **Build and Start Containers:**
    ```bash
    docker compose up -d --build
    ```
+   The `php` entrypoint automatically runs `composer install`, `key:generate`
+   (when `APP_KEY` is empty), `migrate --force` and `storage:link`.
 
-3. **Install Dependencies & Setup Laravel:**
+3. **Seed initial data (optional):**
    ```bash
-   docker compose exec php composer install
-   docker compose exec php php artisan key:generate
-   docker compose exec php php artisan migrate
-   docker compose exec php php artisan storage:link
    docker compose exec php php artisan db:seed
    ```
    *`InitialBookSeeder` replaces the library with every EPUB in `storage/app/public/initial_books/`
@@ -79,6 +73,7 @@ REST API backend for **TrackRead** — a personal book management and reading pr
 4. **Access the API:**
    - Base URL: `http://localhost:8001/api/v1`
    - Interactive API Docs: `http://localhost:8001/docs/api`
+   - Frontend: `http://localhost:5174`
 
 > **Note:** OPcache runs with `validate_timestamps=0`, so PHP code changes are not
 > picked up automatically. After deploying, restart the container:
@@ -95,11 +90,11 @@ REST API backend for **TrackRead** — a personal book management and reading pr
 
 ### Steps
 ```bash
-# 1. Install dependencies
-composer install
-
-# 2. Setup environment
+# 1. Setup environment (single root .env shared by backend & frontend)
 cp .env.example .env
+
+# 2. Install dependencies
+composer install
 php artisan key:generate
 
 # 3. Configure .env with your local PostgreSQL credentials, then run:

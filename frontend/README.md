@@ -32,14 +32,19 @@ Modern Single Page Application (SPA) for **TrackRead** — a personal book manag
 
 ## 🐳 Running with Docker
 
-1. **Build and start the container:**
+> Run this from the **repository root**; a single `docker-compose.yml` there
+> starts PostgreSQL, the API and the frontend together.
+
+1. **Copy the root environment file and start:**
    ```bash
+   cp .env.example .env
    docker compose up -d --build
    ```
 
 2. **Access the application:**
-   - Open `http://localhost:5173` in your browser.
+   - Open `http://localhost:5174` in your browser.
    - Served via high-performance Nginx with SPA routing configured.
+   - The container proxies `/api/` and `/storage/` to the backend container.
 
 ---
 
@@ -56,9 +61,11 @@ Modern Single Page Application (SPA) for **TrackRead** — a personal book manag
 
 2. **Configure Environment (Optional):**
    ```bash
+   # From the repository root:
    cp .env.example .env
    ```
-   *By default, the frontend connects to backend at `http://localhost:8001/api/v1`.*
+   *Vite reads the single root `.env`; set `VITE_API_BASE_URL` /
+   `VITE_STORAGE_BASE_URL` there (default: `http://localhost:8001/...`).*
 
 3. **Start Development Server:**
    ```bash
